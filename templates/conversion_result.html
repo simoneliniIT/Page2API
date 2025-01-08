@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Conversion Result - Product Data Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #faf9f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid #e8e8ed;
+        }
+
+        .result-content {
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #494949;
+            margin-bottom: 24px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 14px 28px;
+            background-color: #1d1d1f;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #000;
+            transform: translateY(-2px);
+        }
+
+        .button.secondary {
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        .button.secondary:hover {
+            background-color: #e8e8ed;
+        }
+
+        .meta-info {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f5f5f7;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #494949;
+        }
+
+        .meta-info p {
+            margin-bottom: 8px;
+        }
+
+        .error {
+            color: #ff3b30;
+            font-weight: 500;
+        }
+
+        .content-section {
+            margin-top: 24px;
+        }
+
+        .result-content {
+            background: #f8f8f8;
+            border: 1px solid #e8e8ed;
+            border-radius: 12px;
+            padding: 24px;
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            color: #494949;
+        }
+
+        .content-section h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Conversion Result</h1>
+        </div>
+        <div class="result-card">
+            <!-- Debug info -->
+            <div class="debug-info" style="margin-bottom: 20px; padding: 10px; background: #f0f0f0;">
+                <p>Result object keys: {{ result.keys()|list if result else 'No result' }}</p>
+                <p>Has converted_content: {{ 'converted_content' in result if result else 'No result' }}</p>
+                <p>Content type: {{ result.converted_content.__class__.__name__ if result and result.converted_content else 'No content' }}</p>
+            </div>
+
+            {% if result %}
+                <div class="meta-info">
+                    <p>Conversion timestamp: {{ result.timestamp }}</p>
+                    <p>Original API spec: {{ result.original_spec }}</p>
+                    <p>Number of products: {{ result.num_products }}</p>
+                </div>
+                
+                {% if result.converted_content %}
+                    <div class="content-section">
+                        <h3>Converted Content:</h3>
+                        <pre class="result-content">{{ result.converted_content | safe }}</pre>
+                    </div>
+                {% else %}
+                    <p class="error">No converted content found in result</p>
+                {% endif %}
+            {% else %}
+                <p class="error">No result data found</p>
+            {% endif %}
+            
+            <div class="button-group">
+                <button class="button" onclick="copyToClipboard()">Copy to Clipboard</button>
+                <a href="/consumer" class="button secondary">Back to Products</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const content = document.querySelector('.result-content');
+            if (content) {
+                const range = document.createRange();
+                range.selectNode(content);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                try {
+                    document.execCommand('copy');
+                    alert('Content copied to clipboard!');
+                } catch (err) {
+                    console.error('Failed to copy', err);
+                    alert('Failed to copy content');
+                }
+                window.getSelection().removeAllRanges();
+            }
+        }
+
+    </script>
+</body>
+</html> 

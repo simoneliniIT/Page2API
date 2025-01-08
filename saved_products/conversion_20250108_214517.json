@@ -1,0 +1,10 @@
+{
+  "id": "conversion_20250108_214517",
+  "converted_content": "{\n  \"id\": \"86th-floor-observatory\",\n  \"title\": \"Empire State Building 86th Floor Observatory\",\n  \"details\": {\n    \"description\": \"Experience soaring 360-degree open-air views of New York City from the Empire State Building's iconic 86th floor Observation Deck. Feel the heart of NYC pulsing all around you from the sky-high vantage point that made history. Day or night, the views are unforgettable.\"\n  },\n  \"categories\": [\n    \"Attraction\"\n  ],\n  \"pricing\": {\n    \"currency\": \"USD\",\n    \"startingFromPrice\": 42,\n    \"availability\": \"Available\"\n  },\n  \"media\": {\n    \"images\": [\n      \"https://www.esbnyc.com/sites/default/files/homepage-lead.jpg\",\n      \"https://www.esbnyc.com/sites/default/files/homepage-lead-nighttime_2.jpg\"\n    ]\n  },\n  \"location\": {\n    \"latitude\": 40.7484405,\n    \"longitude\": -73.9856667\n  },\n  \"webLink\": \"https://www.esbnyc.com/buy-tickets/86th-floor-observatory\"\n}",
+  "original_spec": "https://github.com/headout/api-docs/blob/master/object-models/v2/Product.md",
+  "timestamp": "20250108_214517",
+  "product_ids": [
+    "4"
+  ],
+  "num_products": 1
+}

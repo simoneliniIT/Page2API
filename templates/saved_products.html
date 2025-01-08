@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Saved Products</title>
+    <style>
+        /* Add your existing styles */
+        .product-list {
+            margin: 20px;
+            padding: 20px;
+        }
+        .product-item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Saved Products</h1>
+    
+    <div class="product-list">
+        {% if products %}
+            {% for product in products %}
+                <div class="product-item">
+                    <h3>{{ product.name }}</h3>
+                    <p>Saved on: {{ product.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <div>
+                        <h4>Content:</h4>
+                        <pre>{{ product.content | tojson(indent=2) }}</pre>
+                    </div>
+                    {% if product.api_spec %}
+                        <div>
+                            <h4>API Specification:</h4>
+                            <pre>{{ product.api_spec }}</pre>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No saved products yet</p>
+        {% endif %}
+    </div>
+
+    <script>
+        // Add this to properly format JSON content
+        document.addEventListener('DOMContentLoaded', function() {
+            const pres = document.querySelectorAll('pre');
+            pres.forEach(pre => {
+                try {
+                    const content = JSON.parse(pre.textContent);
+                    pre.textContent = JSON.stringify(content, null, 2);
+                } catch (e) {
+                    // Not JSON, leave as is
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
