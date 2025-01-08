@@ -1,17 +1,23 @@
 #!/bin/bash
 
-# Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate
+# Create public directory
+mkdir -p public
 
-# Install dependencies
-pip install -r requirements.txt
+# Copy static assets
+cp -r static/* public/
 
-# Create static build directory
-mkdir -p build
-cp -r static build/
-cp -r templates build/
+# Copy HTML files directly
+cp templates/index.html public/index.html
+cp templates/login.html public/login.html
+cp templates/signup.html public/signup.html
+cp templates/share.html public/share.html
+cp templates/consumer.html public/consumer.html
 
-# Copy necessary files
-cp app.py build/
-cp requirements.txt build/ 
+# Copy JavaScript and CSS
+mkdir -p public/js
+mkdir -p public/css
+cp static/js/app.js public/js/
+cp static/css/base.css public/css/
+
+# Create _redirects file
+echo "/* /index.html 200" > public/_redirects 

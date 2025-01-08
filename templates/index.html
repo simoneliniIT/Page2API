@@ -1,404 +1,137 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="brand">
-    <h1 class="brand-title">Page2API</h1>
-</div>
-
-<div class="hero">
-    <h1><br>Distribution, everywhere, on <span class="highlight">autopilot</span></h1>
-    <p class="hero-subtitle">Make your products available to every site or app, with no effort</p>
-    <div class="hero-buttons">
-        <a href="{{ url_for('signup') }}" class="button primary">Get started free</a>
-        <a href="{{ url_for('login') }}" class="button secondary">Sign in →</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page2API</title>
+    <link rel="stylesheet" href="/css/base.css">
+</head>
+<body>
+    <div class="brand">
+        <h1 class="brand-title">Page2API</h1>
     </div>
-    <div class="supported-formats">
-        <span>Supported formats:</span>
-        <div class="format-icons">
-            <span class="format">JSON</span>
-            <span class="format">XML</span>
-            <span class="format">CSV</span>
-            <span class="format">API</span>
-        </div>
-    </div>
-</div>
 
-<div class="why-section">
-    <h2>Why Page2API?</h2>
-    <div class="user-types">
-        <div class="user-type-card suppliers">
-            <div class="user-type-header">
-                <div class="user-type-icon">🏭</div>
-                <h3>For Suppliers</h3>
-            </div>
-            <p class="user-type-desc">Share your product data with distributors in any format they need</p>
-            <div class="benefits-list">
-                <div class="benefit-item">
-                    <div class="benefit-icon">⚡️</div>
-                    <div class="benefit-content">
-                        <h4>Save development time</h4>
-                        <p>Stop writing custom data feeds for every distributor</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">🎯</div>
-                    <div class="benefit-content">
-                        <h4>Precise control</h4>
-                        <p>Choose exactly what product data to share</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">🔄</div>
-                    <div class="benefit-content">
-                        <h4>Automatic updates</h4>
-                        <p>Your product data stays in sync automatically</p>
-                    </div>
-                </div>
-            </div>
+    <div class="hero">
+        <h1>Distribution, everywhere, on <span class="highlight">autopilot</span></h1>
+        <p class="hero-subtitle">Make your products available to every site or app, with no effort</p>
+        <div class="hero-buttons">
+            <a href="/signup.html" class="button primary">Get started free</a>
+            <a href="/login.html" class="button secondary">Sign in →</a>
         </div>
-
-        <div class="user-type-card distributors">
-            <div class="user-type-header">
-                <div class="user-type-icon">🏪</div>
-                <h3>For Distributors</h3>
-            </div>
-            <p class="user-type-desc">Get supplier product data in your preferred format instantly</p>
-            <div class="benefits-list">
-                <div class="benefit-item">
-                    <div class="benefit-icon">📊</div>
-                    <div class="benefit-content">
-                        <h4>Structured data</h4>
-                        <p>Get clean, normalized product data every time</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">🔌</div>
-                    <div class="benefit-content">
-                        <h4>Easy integration</h4>
-                        <p>Import products directly into your system</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">⚙️</div>
-                    <div class="benefit-content">
-                        <h4>Custom formats</h4>
-                        <p>Get data in the exact format you need</p>
-                    </div>
-                </div>
+        <div class="supported-formats">
+            <span>Supported formats:</span>
+            <div class="format-icons">
+                <span class="format">JSON</span>
+                <span class="format">XML</span>
+                <span class="format">CSV</span>
+                <span class="format">API</span>
             </div>
         </div>
     </div>
-</div>
 
-<div class="how-it-works">
-    <h2>How does Page2API work?</h2>
-    <div class="steps">
-        <div class="step">
-            <div class="step-number">1</div>
-            <h3>Paste product URL</h3>
-            <p>Simply paste the URL of any product page you want to extract data from.</p>
-        </div>
-        <div class="step">
-            <div class="step-number">2</div>
-            <h3>Choose your format</h3>
-            <p>Select your desired output format or specify a custom API structure.</p>
-        </div>
-        <div class="step">
-            <div class="step-number">3</div>
-            <h3>Get structured data</h3>
-            <p>Receive clean, structured product data ready to use in your applications.</p>
+    <div class="why-section">
+        <h2>Why Page2API?</h2>
+        <div class="user-types">
+            <div class="user-type-card suppliers">
+                <div class="user-type-header">
+                    <div class="user-type-icon">🏭</div>
+                    <h3>For Suppliers</h3>
+                </div>
+                <p class="user-type-desc">Share your product data with distributors in any format they need</p>
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">⚡️</div>
+                        <div class="benefit-content">
+                            <h4>Save development time</h4>
+                            <p>Stop writing custom data feeds for every distributor</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🎯</div>
+                        <div class="benefit-content">
+                            <h4>Precise control</h4>
+                            <p>Choose exactly what product data to share</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🔄</div>
+                        <div class="benefit-content">
+                            <h4>Automatic updates</h4>
+                            <p>Your product data stays in sync automatically</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-type-card distributors">
+                <div class="user-type-header">
+                    <div class="user-type-icon">🏪</div>
+                    <h3>For Distributors</h3>
+                </div>
+                <p class="user-type-desc">Get supplier product data in your preferred format instantly</p>
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">📊</div>
+                        <div class="benefit-content">
+                            <h4>Structured data</h4>
+                            <p>Get clean, normalized product data every time</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🔌</div>
+                        <div class="benefit-content">
+                            <h4>Easy integration</h4>
+                            <p>Import products directly into your system</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">⚙️</div>
+                        <div class="benefit-content">
+                            <h4>Custom formats</h4>
+                            <p>Get data in the exact format you need</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="cta-section">
-    <h2>Ready to streamline your product data?</h2>
-    <p>Start converting product pages today - no credit card required.</p>
-    <a href="{{ url_for('signup') }}" class="button primary large">Try Page2API free →</a>
-</div>
-
-<div class="footer">
-    <div class="footer-content">
-        <p>© 2024 Page2API. All rights reserved.</p>
-        <div class="footer-links">
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-            <a href="#">Contact</a>
+    <div class="how-it-works">
+        <h2>How does Page2API work?</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Paste product URL</h3>
+                <p>Simply paste the URL of any product page you want to extract data from.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Choose your format</h3>
+                <p>Select your desired output format or specify a custom API structure.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Get structured data</h3>
+                <p>Receive clean, structured product data ready to use in your applications.</p>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block extra_css %}
-<style>
-.brand {
-    text-align: center;
-    padding: 40px 20px 0;
-}
+    <div class="cta-section">
+        <h2>Ready to streamline your product data?</h2>
+        <p>Start converting product pages today - no credit card required.</p>
+        <a href="/signup.html" class="button primary large">Try Page2API free →</a>
+    </div>
 
-.brand-title {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 48px;
-    font-weight: 700;
-    color: #E63946;
-    margin: 0;
-    text-transform: none;
-    display: inline-block;
-}
+    <div class="footer">
+        <div class="footer-content">
+            <p>© 2024 Page2API. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Terms</a>
+                <a href="#">Privacy</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </div>
 
-.hero {
-    text-align: center;
-    padding: 80px 20px;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.hero h1 {
-    font-size: 56px;
-    line-height: 1.2;
-    margin-bottom: 24px;
-    background: linear-gradient(90deg, #1a1a1a, #4a4a4a);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.highlight {
-    color: #0071e3;
-    -webkit-text-fill-color: #0071e3;
-}
-
-.hero-subtitle {
-    font-size: 24px;
-    color: #666;
-    margin-bottom: 40px;
-    line-height: 1.4;
-}
-
-.hero-buttons {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    margin-bottom: 48px;
-}
-
-.button.large {
-    padding: 16px 32px;
-    font-size: 18px;
-}
-
-.supported-formats {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    color: #666;
-}
-
-.format-icons {
-    display: flex;
-    gap: 12px;
-}
-
-.format {
-    padding: 4px 12px;
-    background: #f5f5f7;
-    border-radius: 16px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.why-section {
-    padding: 80px 20px;
-    background: #f5f5f7;
-}
-
-.why-section h2 {
-    text-align: center;
-    font-size: 40px;
-    margin-bottom: 48px;
-}
-
-.user-types {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.user-type-card {
-    background: white;
-    padding: 40px;
-    border-radius: 24px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.user-type-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.user-type-icon {
-    font-size: 32px;
-}
-
-.user-type-header h3 {
-    font-size: 24px;
-    margin: 0;
-}
-
-.user-type-desc {
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 32px;
-    line-height: 1.4;
-}
-
-.benefits-list {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-.benefit-item {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-}
-
-.benefit-item .benefit-icon {
-    font-size: 24px;
-    flex-shrink: 0;
-}
-
-.benefit-content h4 {
-    font-size: 18px;
-    margin: 0 0 8px 0;
-    color: #1d1d1f;
-}
-
-.benefit-content p {
-    margin: 0;
-    color: #666;
-    line-height: 1.5;
-}
-
-.how-it-works {
-    padding: 80px 20px;
-    text-align: center;
-}
-
-.how-it-works h2 {
-    font-size: 40px;
-    margin-bottom: 48px;
-}
-
-.steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 40px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.step {
-    position: relative;
-    padding: 24px;
-}
-
-.step-number {
-    width: 40px;
-    height: 40px;
-    background: #0071e3;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    margin: 0 auto 24px;
-}
-
-.step h3 {
-    font-size: 20px;
-    margin-bottom: 16px;
-}
-
-.step p {
-    color: #666;
-    line-height: 1.6;
-}
-
-.cta-section {
-    text-align: center;
-    padding: 80px 20px;
-    background: #f5f5f7;
-}
-
-.cta-section h2 {
-    font-size: 40px;
-    margin-bottom: 16px;
-}
-
-.cta-section p {
-    color: #666;
-    margin-bottom: 32px;
-    font-size: 20px;
-}
-
-.footer {
-    padding: 40px 20px;
-    border-top: 1px solid #e5e5e5;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.footer-links {
-    display: flex;
-    gap: 24px;
-}
-
-.footer-links a {
-    color: #666;
-    text-decoration: none;
-}
-
-.footer-links a:hover {
-    color: #0071e3;
-}
-
-@media (max-width: 768px) {
-    .hero h1 {
-        font-size: 40px;
-    }
-    
-    .hero-subtitle {
-        font-size: 20px;
-    }
-    
-    .user-types {
-        grid-template-columns: 1fr;
-    }
-    
-    .user-type-card {
-        padding: 32px;
-    }
-    
-    .footer-content {
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
-}
-</style>
-{% endblock %}
+    <script src="/js/app.js"></script>
+</body>
+</html>
