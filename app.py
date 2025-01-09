@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
@@ -54,6 +55,15 @@ class Product(db.Model):
 # Create a directory for storing saved products if it doesn't exist
 PRODUCTS_DIR = 'saved_products'
 os.makedirs(PRODUCTS_DIR, exist_ok=True)
+
+# Add admin required decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.email != "admin@admin.com":
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def index():
@@ -681,6 +691,33 @@ def delete_selected():
         print(f"Error deleting products: {str(e)}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+# Add admin route
+@app.route('/admin')
+@admin_required
+def admin():
+    users = User.query.all()
+    return render_template('admin/dashboard.html', users=users)
+
+# Add this to your initialization code to create admin user
+def create_admin_user():
+    admin_user = User.query.filter_by(email="admin@admin.com").first()
+    if not admin_user:
+        admin_user = User(
+            email="admin@admin.com",
+            first_name="Admin",
+            last_name="User",
+            company_name="Page2API",
+            user_type="admin"
+        )
+        admin_user.set_password("admin")
+        db.session.add(admin_user)
+        db.session.commit()
+
+# Call this after db initialization
+with app.app_context():
+    db.create_all()  # Make sure tables are created
+    create_admin_user()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

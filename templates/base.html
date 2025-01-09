@@ -34,5 +34,12 @@
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% block extra_js %}{% endblock %}
+
+    <!-- Add this in your navigation bar -->
+    {% if current_user.is_authenticated and current_user.email == "admin@admin.com" %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
+    </li>
+    {% endif %}
 </body>
 </html> 
