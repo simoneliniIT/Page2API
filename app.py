@@ -110,16 +110,28 @@ def index():
 def convert():
     try:
         data = request.get_json()
-        product_url = data['product_url']
-        conversion_type = data['conversion_type']
+        product_url = data.get('product_url')
+        conversion_type = data.get('conversion_type')
+        
+        if not product_url:
+            return jsonify({'error': 'Product URL is required'}), 400
+            
+        if not conversion_type:
+            return jsonify({'error': 'Conversion type is required'}), 400
+        
+        print(f"\nStarting conversion - Type: {conversion_type}")
+        print(f"Product URL: {product_url}")
+        
+        # Get Claude's response based on conversion type
+        anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
         
         if conversion_type == 'custom_api':
-            api_spec = data['api_spec']
+            # Custom API conversion
+            api_spec = data.get('api_spec')
             if not api_spec:
                 return jsonify({'error': 'API specification is required for custom API conversion'}), 400
-            
-            # Get Claude's response for custom API
-            anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+                
+            print(f"Using custom API spec: {api_spec[:100]}...")
             prompt = f"""Given this product URL:
 {product_url}
 
@@ -129,9 +141,35 @@ And this target API specification:
 Please convert the product data to match the target API specification format.
 Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
 
+        elif conversion_type == 'use_template':
+            # Template-based conversion
+            template_id = data.get('template_id')
+            if not template_id:
+                return jsonify({'error': 'Template ID is required when using a template'}), 400
+                
+            # Get template URL
+            template = Template.query.get(template_id)
+            if not template:
+                return jsonify({'error': 'Selected template not found'}), 404
+                
+            print(f"Using template: {template.name} ({template.url})")
+            prompt = f"""Given this product URL:
+{product_url}
+
+Please convert the product data to match the format of this template product:
+{template.url}
+
+Important guidelines:
+1. Match the exact structure and field names from the template
+2. Include ONLY factual information found on the product page
+3. DO NOT invent or assume any data not explicitly shown
+4. Use the same data types as the template for each field
+
+Return ONLY the converted data in the same format as the template, with no additional text or explanations."""
+
         else:  # structured_json
-            # Get Claude's response for structured JSON
-            anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+            # Default structured JSON conversion
+            print("Using structured JSON conversion")
             prompt = f"""Given this product URL:
 {product_url}
 
@@ -147,6 +185,7 @@ Important guidelines:
 
 Return ONLY the JSON data with no additional text or explanations."""
 
+        print("Calling Claude API...")
         message = anthropic.messages.create(
             model="claude-3-sonnet-20240229",
             max_tokens=2048,
@@ -157,16 +196,21 @@ Return ONLY the JSON data with no additional text or explanations."""
         )
         
         formatted_output = message.content[0].text.strip()
-        print(f"Initial conversion output: {formatted_output}")  # Debug print
+        print(f"Got response from Claude ({len(formatted_output)} chars)")
         
-        # Return the formatted output directly
+        # Return the formatted output with the appropriate spec
+        spec = data.get('api_spec') if conversion_type == 'custom_api' else (
+            f"Template: {template.name}" if conversion_type == 'use_template' else 'Structured JSON'
+        )
+        
         return jsonify({
             'content': formatted_output,
-            'feed_spec': data.get('api_spec', 'Structured JSON')
+            'feed_spec': spec
         })
         
     except Exception as e:
-        print(f"Conversion error: {str(e)}")  # Debug print
+        print(f"Conversion error: {str(e)}")
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/save-product', methods=['POST'])
