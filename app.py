@@ -52,6 +52,13 @@ class Product(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     api_spec = db.Column(db.Text)
 
+# Add Template model after the Product model
+class Template(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 # Create a directory for storing saved products if it doesn't exist
 PRODUCTS_DIR = 'saved_products'
 os.makedirs(PRODUCTS_DIR, exist_ok=True)
@@ -60,8 +67,14 @@ os.makedirs(PRODUCTS_DIR, exist_ok=True)
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.user_type != 'admin':
+        print(f"\nAdmin access check - User: {current_user.email if current_user.is_authenticated else 'Not authenticated'}")  # Debug log
+        if not current_user.is_authenticated:
+            print("Access denied - Not authenticated")  # Debug log
+            return redirect(url_for('login'))
+        if current_user.user_type != 'admin':
+            print(f"Access denied - Not admin (type: {current_user.user_type})")  # Debug log
             return 'Access denied', 403
+        print("Admin access granted")  # Debug log
         return f(*args, **kwargs)
     return decorated_function
 
@@ -574,22 +587,32 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
+        print(f"\nLogin attempt - Email: {email}")  # Debug log
+        
         user = User.query.filter_by(email=email).first()
+        print(f"User found: {bool(user)}")  # Debug log
+        if user:
+            print(f"User type: {user.user_type}")  # Debug log
         
         if user and user.check_password(password):
             login_user(user)
-            print(f"User logged in - Email: {user.email}, Type: {user.user_type}")  # Debug print
+            print(f"Login successful - User: {user.email}, Type: {user.user_type}")  # Debug log
             
             # Redirect based on user type
             if user.user_type == 'admin':
-                return redirect(url_for('admin'))  # Redirect admin to admin dashboard
+                print("Redirecting to admin dashboard")  # Debug log
+                return redirect(url_for('admin'))
             elif user.user_type == 'supplier':
+                print("Redirecting to share page")  # Debug log
                 return redirect(url_for('share'))
             elif user.user_type == 'distributor':
+                print("Redirecting to consumer page")  # Debug log
                 return redirect(url_for('consumer'))
             else:
-                print(f"Unknown user type: {user.user_type}")  # Debug print
+                print(f"Unknown user type: {user.user_type}")  # Debug log
                 return redirect(url_for('index'))
+        else:
+            print("Login failed - Invalid credentials")  # Debug log
         
         return 'Invalid email or password'
 
@@ -690,10 +713,55 @@ def delete_selected():
 
 # Add admin route
 @app.route('/admin')
+@login_required
 @admin_required
 def admin():
+    print("\nAdmin dashboard accessed")  # Debug log
     users = User.query.all()
-    return render_template('admin/dashboard.html', users=users)
+    templates = Template.query.order_by(Template.created_at.desc()).all()
+    print(f"Found {len(users)} users and {len(templates)} templates")  # Debug log
+    return render_template('admin/dashboard.html', users=users, templates=templates)
+
+# Add template management routes before the admin route
+@app.route('/admin/templates/add', methods=['POST'])
+@login_required
+@admin_required
+def add_template():
+    try:
+        name = request.form['name']
+        url = request.form['url']
+        
+        template = Template(name=name, url=url)
+        db.session.add(template)
+        db.session.commit()
+        
+        return redirect(url_for('admin'))
+    except Exception as e:
+        print(f"Error adding template: {str(e)}")
+        return str(e), 500
+
+@app.route('/admin/templates/delete/<int:template_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_template(template_id):
+    try:
+        template = Template.query.get_or_404(template_id)
+        db.session.delete(template)
+        db.session.commit()
+        return redirect(url_for('admin'))
+    except Exception as e:
+        print(f"Error deleting template: {str(e)}")
+        return str(e), 500
+
+@app.route('/api/templates')
+@login_required
+def get_templates():
+    templates = Template.query.all()
+    return jsonify([{
+        'id': t.id,
+        'name': t.name,
+        'url': t.url
+    } for t in templates])
 
 # Add this to your initialization code to create admin user
 def create_admin_user():

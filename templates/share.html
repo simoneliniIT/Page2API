@@ -589,29 +589,38 @@
                 <p class="help-text">Enter the URL of the product page you want to convert</p>
             </div>
 
-            <div class="form-group">
-                <label>Conversion Type</label>
-                <div class="radio-group">
-                    <div class="radio-option">
-                        <input type="radio" id="custom_api" name="conversion_type" value="custom_api" checked 
-                               onchange="toggleConversionType()">
-                        <label for="custom_api">Custom API Specification</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="structured_json" name="conversion_type" value="structured_json"
-                               onchange="toggleConversionType()">
-                        <label for="structured_json">Structured JSON (AI-generated)</label>
-                    </div>
+            <div class="form-group mb-3">
+                <label>Conversion Type:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="conversionType" id="customApi" value="custom_api" checked>
+                    <label class="form-check-label" for="customApi">
+                        Custom API Specification
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="conversionType" id="structuredJson" value="structured_json">
+                    <label class="form-check-label" for="structuredJson">
+                        Structured JSON (AI-generated)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="conversionType" id="template" value="template">
+                    <label class="form-check-label" for="template">
+                        Use Template
+                    </label>
                 </div>
             </div>
 
-            <div id="apiSpecSection" class="api-spec-section active">
-                <div class="form-group">
-                    <label for="api_spec">Target API Specification</label>
-                    <textarea id="api_spec" name="api_spec"
-                              placeholder="Enter your target API format specification (XML, JSON, etc.)"></textarea>
-                    <p class="help-text">Specify the format you want your product data converted to</p>
-                </div>
+            <div class="form-group mb-3" id="templateSelect" style="display: none;">
+                <label for="templateDropdown">Select Template:</label>
+                <select class="form-select" id="templateDropdown">
+                    <option value="">Loading templates...</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3" id="apiSpecGroup">
+                <label for="apiSpec">API Specification:</label>
+                <textarea class="form-control" id="apiSpec" rows="5" placeholder="Enter your API specification here"></textarea>
             </div>
 
             <div class="button-group">
@@ -1078,6 +1087,90 @@
                 document.getElementById('api_spec').required = false;
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const conversionTypeInputs = document.querySelectorAll('input[name="conversionType"]');
+            const apiSpecGroup = document.getElementById('apiSpecGroup');
+            const templateSelect = document.getElementById('templateSelect');
+            const templateDropdown = document.getElementById('templateDropdown');
+            
+            // Load templates when page loads
+            fetch('/api/templates')
+                .then(response => response.json())
+                .then(templates => {
+                    templateDropdown.innerHTML = '<option value="">Select a template...</option>' +
+                        templates.map(t => `<option value="${t.url}">${t.name}</option>`).join('');
+                })
+                .catch(error => console.error('Error loading templates:', error));
+            
+            // Handle conversion type change
+            conversionTypeInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    if (this.value === 'template') {
+                        apiSpecGroup.style.display = 'none';
+                        templateSelect.style.display = 'block';
+                    } else {
+                        apiSpecGroup.style.display = 'block';
+                        templateSelect.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Update the existing handleSubmit function
+            window.handleSubmit = function(event) {
+                event.preventDefault();
+                
+                const conversionType = document.querySelector('input[name="conversionType"]:checked').value;
+                let apiSpec;
+                
+                if (conversionType === 'template') {
+                    apiSpec = templateDropdown.value;
+                    if (!apiSpec) {
+                        showAlert('Please select a template');
+                        return;
+                    }
+                } else {
+                    apiSpec = document.getElementById('apiSpec').value;
+                    if (conversionType === 'custom_api' && !apiSpec) {
+                        showAlert('Please enter an API specification');
+                        return;
+                    }
+                }
+                
+                // Rest of your existing handleSubmit code...
+                const selectedProducts = Array.from(document.querySelectorAll('input[name="product"]:checked'))
+                    .map(checkbox => checkbox.value);
+                    
+                if (selectedProducts.length === 0) {
+                    showAlert('Please select at least one product');
+                    return;
+                }
+                
+                fetch('/convert-selected', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        product_ids: selectedProducts,
+                        api_spec: apiSpec,
+                        conversion_type: conversionType
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showAlert(data.error);
+                    } else {
+                        window.location.href = `/conversion-result/${data.id}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while converting the products');
+                });
+            };
+        });
     </script>
 </body>
 </html> 

@@ -3,57 +3,99 @@
 {% block title %}Admin Dashboard - Page2API{% endblock %}
 
 {% block content %}
-<div class="admin-dashboard">
+<div class="container mt-4">
     <h1>Admin Dashboard</h1>
     
-    <div class="admin-stats">
-        <h2>System Statistics</h2>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Users</h3>
-                <p>{{ users|length }}</p>
-            </div>
-            <div class="stat-card">
-                <h3>Suppliers</h3>
-                <p>{{ users|selectattr("user_type", "equalto", "supplier")|list|length }}</p>
-            </div>
-            <div class="stat-card">
-                <h3>Distributors</h3>
-                <p>{{ users|selectattr("user_type", "equalto", "distributor")|list|length }}</p>
-            </div>
+    <!-- Users Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Users</h2>
         </div>
-    </div>
-
-    <div class="user-management">
-        <h2>User Management</h2>
-        <div class="table-container">
-            <table>
+        <div class="card-body">
+            <table class="table">
                 <thead>
                     <tr>
-                        <th>Name</th>
+                        <th>ID</th>
                         <th>Email</th>
+                        <th>Name</th>
                         <th>Company</th>
                         <th>Type</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                     <tr>
-                        <td>{{ user.first_name }} {{ user.last_name }}</td>
+                        <td>{{ user.id }}</td>
                         <td>{{ user.email }}</td>
+                        <td>{{ user.first_name }} {{ user.last_name }}</td>
                         <td>{{ user.company_name }}</td>
                         <td>{{ user.user_type }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Template Manager Section -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2>Template Manager</h2>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
+                Add Template
+            </button>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>URL</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td>{{ template.name }}</td>
+                        <td>{{ template.url }}</td>
                         <td>
-                            <button class="button secondary small">Edit</button>
-                            {% if user.email != "admin@admin.com" %}
-                            <button class="button danger small">Delete</button>
-                            {% endif %}
+                            <form action="{{ url_for('delete_template', template_id=template.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this template?')">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Template Modal -->
+<div class="modal fade" id="addTemplateModal" tabindex="-1" aria-labelledby="addTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTemplateModalLabel">Add New Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('add_template') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="templateName" class="form-label">Template Name</label>
+                        <input type="text" class="form-control" id="templateName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="templateUrl" class="form-label">Template URL</label>
+                        <input type="url" class="form-control" id="templateUrl" name="url" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Template</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
