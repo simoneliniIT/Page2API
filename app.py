@@ -273,21 +273,12 @@ def delete_product(product_id):
 @app.route('/consumer')
 @login_required
 def consumer():
-    if current_user.user_type != 'distributor':
+    if current_user.user_type not in ['distributor', 'admin']:
         return 'Access denied', 403
     
     # Get all products from all suppliers with owners preloaded
     products = Product.query.join(User).order_by(Product.timestamp.desc()).all()
     print(f"Consumer route - Found {len(products)} total products")
-    
-    # Debug print each product's details
-    for product in products:
-        print(f"Product {product.id}:")
-        print(f"  Name: {product.name}")
-        print(f"  Owner: {product.owner.company_name} (User {product.user_id})")
-        print(f"  Has content: {bool(product.content)}")
-        print(f"  Has API spec: {bool(product.api_spec)}")
-        print(f"  Timestamp: {product.timestamp}")
     
     return render_template('consumer.html', products=products)
 
@@ -428,20 +419,16 @@ def download_selected():
 @app.route('/share')
 @login_required
 def share():
-    if current_user.user_type != 'supplier':
+    if current_user.user_type not in ['supplier', 'admin']:
         return 'Access denied', 403
     
     # Get user's products
-    products = Product.query.filter_by(user_id=current_user.id).order_by(Product.timestamp.desc()).all()
-    print(f"Share route - Found {len(products)} products for user {current_user.email}")
+    if current_user.user_type == 'admin':
+        products = Product.query.order_by(Product.timestamp.desc()).all()
+    else:
+        products = Product.query.filter_by(user_id=current_user.id).order_by(Product.timestamp.desc()).all()
     
-    # Debug print each product's details
-    for product in products:
-        print(f"Product {product.id}:")
-        print(f"  Name: {product.name}")
-        print(f"  Has content: {bool(product.content)}")
-        print(f"  Has API spec: {bool(product.api_spec)}")
-        print(f"  Timestamp: {product.timestamp}")
+    print(f"Share route - Found {len(products)} products")
     
     return render_template('share.html', products=products)
 
@@ -590,7 +577,9 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             # Redirect based on user type
-            if user.user_type == 'supplier':
+            if user.user_type == 'admin':
+                return redirect(url_for('admin'))
+            elif user.user_type == 'supplier':
                 return redirect(url_for('share'))
             else:
                 return redirect(url_for('consumer'))
