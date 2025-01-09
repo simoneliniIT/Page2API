@@ -82,7 +82,7 @@
 </div>
 
 <!-- Add Template Modal -->
-<div class="modal fade" id="addTemplateModal" tabindex="-1" aria-labelledby="addTemplateModalLabel" aria-hidden="true">
+<div class="modal" id="addTemplateModal" tabindex="-1" aria-labelledby="addTemplateModalLabel" aria-hidden="true" style="display: none;">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -108,6 +108,9 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade" style="display: none;"></div>
 {% endblock %}
 
 {% block extra_css %}
@@ -220,6 +223,11 @@ h2 {
 
 .text-break {
     word-break: break-word;
+}
+
+/* Hide modal by default */
+.modal:not(.show) {
+    display: none !important;
 }
 </style>
 
