@@ -728,7 +728,7 @@
             let apiSpec = '';
             let templateId = '';
             
-            if (conversionType === 'use_template') {
+            if (conversionType === 'template') {
                 templateId = templateDropdown.value;
                 if (!templateId) {
                     showAlert('Please select a template');
@@ -1117,7 +1117,7 @@
                 .then(response => response.json())
                 .then(templates => {
                     templateDropdown.innerHTML = '<option value="">Select a template...</option>' +
-                        templates.map(t => `<option value="${t.url}">${t.name}</option>`).join('');
+                        templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
                 })
                 .catch(error => console.error('Error loading templates:', error));
             
@@ -1127,8 +1127,12 @@
                     if (this.value === 'template') {
                         apiSpecGroup.style.display = 'none';
                         templateSelect.style.display = 'block';
-                    } else {
+                    } else if (this.value === 'custom_api') {
                         apiSpecGroup.style.display = 'block';
+                        templateSelect.style.display = 'none';
+                    } else {
+                        // For structured_json
+                        apiSpecGroup.style.display = 'none';
                         templateSelect.style.display = 'none';
                     }
                 });
@@ -1148,7 +1152,7 @@
                 let apiSpec = '';
                 let templateId = '';
                 
-                if (conversionType === 'use_template') {
+                if (conversionType === 'template') {
                     templateId = templateDropdown.value;
                     if (!templateId) {
                         showAlert('Please select a template');

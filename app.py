@@ -141,7 +141,7 @@ And this target API specification:
 Please convert the product data to match the target API specification format.
 Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
 
-        elif conversion_type == 'use_template':
+        elif conversion_type == 'template':
             # Template-based conversion
             template_id = data.get('template_id')
             if not template_id:
@@ -200,7 +200,7 @@ Return ONLY the JSON data with no additional text or explanations."""
         
         # Return the formatted output with the appropriate spec
         spec = data.get('api_spec') if conversion_type == 'custom_api' else (
-            f"Template: {template.name}" if conversion_type == 'use_template' else 'Structured JSON'
+            f"Template: {template.name}" if conversion_type == 'template' else 'Structured JSON'
         )
         
         return jsonify({
