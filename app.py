@@ -455,9 +455,12 @@ def share():
     else:
         products = Product.query.filter_by(user_id=current_user.id).order_by(Product.timestamp.desc()).all()
     
-    print(f"Share route - Found {len(products)} products")
+    # Get all templates
+    templates = Template.query.order_by(Template.created_at.desc()).all()
     
-    return render_template('share.html', products=products)
+    print(f"Share route - Found {len(products)} products and {len(templates)} templates")
+    
+    return render_template('share.html', products=products, templates=templates)
 
 @app.route('/convert-selected', methods=['POST'])
 @login_required
