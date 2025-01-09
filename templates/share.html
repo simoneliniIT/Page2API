@@ -742,6 +742,12 @@
                 }
             }
             
+            // Show loading state
+            const submitButton = document.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Converting...';
+            submitButton.disabled = true;
+            
             fetch('/convert', {
                 method: 'POST',
                 headers: {
@@ -769,6 +775,11 @@
             .catch(error => {
                 console.error('Error:', error);
                 showAlert('An error occurred while converting the product');
+            })
+            .finally(() => {
+                // Reset button state
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
             });
         }
 
@@ -1000,40 +1011,6 @@
             return Array.from(checkboxes).map(cb => cb.dataset.productId);
         }
 
-        async function convertAll() {
-            const apiSpec = document.getElementById('api_spec').value;
-            if (!apiSpec) {
-                alert('Please enter an API specification');
-                return;
-            }
-
-            try {
-                const response = await fetch('/convert-all', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        api_spec: apiSpec
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Conversion failed');
-                }
-
-                const result = await response.json();
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-
-                // Redirect to the conversion result page
-                window.location.href = `/conversion-result/${result.id}`;
-            } catch (error) {
-                alert('Error during conversion: ' + error.message);
-            }
-        }
-
         // Add modal handling functions
         function showModal({ title, message, buttons }) {
             const modalOverlay = document.getElementById('modalOverlay');
@@ -1166,6 +1143,12 @@
                     }
                 }
                 
+                // Show loading state
+                const submitButton = document.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+                submitButton.textContent = 'Converting...';
+                submitButton.disabled = true;
+                
                 fetch('/convert', {
                     method: 'POST',
                     headers: {
@@ -1193,6 +1176,11 @@
                 .catch(error => {
                     console.error('Error:', error);
                     showAlert('An error occurred while converting the product');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitButton.textContent = originalText;
+                    submitButton.disabled = false;
                 });
             };
         });
