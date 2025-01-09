@@ -1,13 +1,4 @@
-import sys
-import os
+from app import app
 
-# Add your project directory to the sys.path
-path = '/home/simonelini/Page2API'
-if path not in sys.path:
-    sys.path.append(path)
-
-# Import your Flask app
-from app import app as application
-
-# Set environment variables if needed
-os.environ['FLASK_ENV'] = 'production' 
+if __name__ == "__main__":
+    app.run() 
