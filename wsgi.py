@@ -2,7 +2,7 @@ import sys
 import os
 
 # Add your project directory to the sys.path
-path = '/home/YOUR_PYTHONANYWHERE_USERNAME/Page2API'
+path = '/home/simonelini/Page2API'
 if path not in sys.path:
     sys.path.append(path)
 
