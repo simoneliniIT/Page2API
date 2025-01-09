@@ -717,9 +717,11 @@ def delete_selected():
 @admin_required
 def admin():
     print("\nAdmin dashboard accessed")  # Debug log
-    users = User.query.all()
+    users = User.query.order_by(User.id).all()  # Order by ID to ensure consistent display
     templates = Template.query.order_by(Template.created_at.desc()).all()
     print(f"Found {len(users)} users and {len(templates)} templates")  # Debug log
+    for user in users:  # Debug log
+        print(f"User: {user.email} (ID: {user.id}, Type: {user.user_type})")
     return render_template('admin/dashboard.html', users=users, templates=templates)
 
 # Add template management routes before the admin route
