@@ -14,8 +14,20 @@ from flask_migrate import Migrate
 from functools import wraps
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
-app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this to a secure secret key
+
+# Use PostgreSQL on Render and SQLite locally
+if os.environ.get('RENDER'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')  # Change this to a secure secret key
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,  # Enable connection health checks
+    'pool_recycle': 300,    # Recycle connections every 5 minutes
+}
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager()
@@ -716,21 +728,37 @@ def delete_selected():
 @login_required
 @admin_required
 def admin():
-    print("\nAdmin dashboard accessed")  # Debug log
-    
-    # Clear any existing session
-    db.session.remove()
-    
-    # Get all users with a fresh query
-    users = User.query.order_by(User.id).all()
-    templates = Template.query.order_by(Template.created_at.desc()).all()
-    
-    # Debug logging
-    print(f"Found {len(users)} users and {len(templates)} templates")
-    for user in users:
-        print(f"User: {user.email} (ID: {user.id}, Type: {user.user_type}, Name: {user.first_name} {user.last_name})")
-    
-    return render_template('admin/dashboard.html', users=users, templates=templates)
+    try:
+        print("\n=== Admin Dashboard Access ===")
+        print(f"Current user: {current_user.email} (ID: {current_user.id}, Type: {current_user.user_type})")
+        
+        # Clear any existing session and create a new one
+        db.session.remove()
+        db.session.begin()
+        
+        # Get all users with a fresh query
+        users = User.query.order_by(User.id).all()
+        templates = Template.query.order_by(Template.created_at.desc()).all()
+        
+        # Debug logging
+        print(f"\nFound {len(users)} users:")
+        for user in users:
+            print(f"- User: {user.email} (ID: {user.id}, Type: {user.user_type}, Name: {user.first_name} {user.last_name})")
+        
+        print(f"\nFound {len(templates)} templates")
+        print("=== End Admin Dashboard Access ===\n")
+        
+        # Ensure we have a valid database connection
+        if not db.session.is_active:
+            db.session.begin()
+        
+        return render_template('admin/dashboard.html', users=users, templates=templates)
+        
+    except Exception as e:
+        print(f"Error in admin route: {str(e)}")
+        traceback.print_exc()
+        db.session.rollback()
+        return f"Error loading admin dashboard: {str(e)}", 500
 
 # Add template management routes before the admin route
 @app.route('/admin/templates/add', methods=['POST'])
@@ -830,6 +858,37 @@ def debug_users():
         } for u in users])
     except Exception as e:
         return jsonify({'error': str(e)})
+
+# Add route to force database initialization
+@app.route('/init-db')
+def init_db():
+    try:
+        print("\n=== Initializing Database ===")
+        
+        # Create all tables
+        db.create_all()
+        print("Tables created successfully")
+        
+        # Create admin and test users
+        create_admin_user()
+        print("Users created/updated successfully")
+        
+        # Get all users to verify
+        users = User.query.all()
+        print(f"\nFound {len(users)} users:")
+        for user in users:
+            print(f"- User: {user.email} (ID: {user.id}, Type: {user.user_type})")
+        
+        print("=== Database Initialization Complete ===\n")
+        return jsonify({
+            'message': 'Database initialized successfully',
+            'users': [{'email': u.email, 'type': u.user_type} for u in users]
+        })
+        
+    except Exception as e:
+        print(f"Error initializing database: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 # Call this after db initialization
 with app.app_context():
