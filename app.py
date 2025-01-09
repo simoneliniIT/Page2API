@@ -776,6 +776,7 @@ def get_templates():
 # Add this to your initialization code to create admin user
 def create_admin_user():
     try:
+        # Create admin user
         admin_user = User.query.filter_by(email="admin@admin.com").first()
         if not admin_user:
             admin_user = User(
@@ -794,9 +795,41 @@ def create_admin_user():
             admin_user.user_type = "admin"
             db.session.commit()
             print("Existing admin user updated")
+
+        # Create test user if doesn't exist
+        test_user = User.query.filter_by(email="simone.lini@gmail.com").first()
+        if not test_user:
+            test_user = User(
+                email="simone.lini@gmail.com",
+                first_name="Simone",
+                last_name="Lini",
+                company_name="Page2API",
+                user_type="supplier"
+            )
+            test_user.set_password("password")  # Set a default password
+            db.session.add(test_user)
+            db.session.commit()
+            print("Test user created successfully")
+        else:
+            print("Test user already exists")
+
     except Exception as e:
-        print(f"Error creating/updating admin user: {str(e)}")
+        print(f"Error creating/updating users: {str(e)}")
         db.session.rollback()
+
+# Add debug route to check users
+@app.route('/debug-users')
+def debug_users():
+    try:
+        users = User.query.all()
+        return jsonify([{
+            'id': u.id,
+            'email': u.email,
+            'type': u.user_type,
+            'name': f"{u.first_name} {u.last_name}"
+        } for u in users])
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 # Call this after db initialization
 with app.app_context():
