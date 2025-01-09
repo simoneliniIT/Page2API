@@ -60,8 +60,8 @@ os.makedirs(PRODUCTS_DIR, exist_ok=True)
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.email != "admin@admin.com":
-            return redirect(url_for('login'))
+        if not current_user.is_authenticated or current_user.user_type != 'admin':
+            return 'Access denied', 403
         return f(*args, **kwargs)
     return decorated_function
 
@@ -71,7 +71,9 @@ def index():
         return render_template('index.html')
     
     # Redirect based on user type
-    if current_user.user_type == 'supplier':
+    if current_user.user_type == 'admin':
+        return redirect(url_for('admin'))
+    elif current_user.user_type == 'supplier':
         return redirect(url_for('share'))
     elif current_user.user_type == 'distributor':
         return redirect(url_for('consumer'))
@@ -573,16 +575,21 @@ def login():
         email = request.form['email']
         password = request.form['password']
         user = User.query.filter_by(email=email).first()
-
+        
         if user and user.check_password(password):
             login_user(user)
+            print(f"User logged in - Email: {user.email}, Type: {user.user_type}")  # Debug print
+            
             # Redirect based on user type
             if user.user_type == 'admin':
-                return redirect(url_for('admin'))
+                return redirect(url_for('admin'))  # Redirect admin to admin dashboard
             elif user.user_type == 'supplier':
                 return redirect(url_for('share'))
-            else:
+            elif user.user_type == 'distributor':
                 return redirect(url_for('consumer'))
+            else:
+                print(f"Unknown user type: {user.user_type}")  # Debug print
+                return redirect(url_for('index'))
         
         return 'Invalid email or password'
 
@@ -690,18 +697,28 @@ def admin():
 
 # Add this to your initialization code to create admin user
 def create_admin_user():
-    admin_user = User.query.filter_by(email="admin@admin.com").first()
-    if not admin_user:
-        admin_user = User(
-            email="admin@admin.com",
-            first_name="Admin",
-            last_name="User",
-            company_name="Page2API",
-            user_type="admin"
-        )
-        admin_user.set_password("admin")
-        db.session.add(admin_user)
-        db.session.commit()
+    try:
+        admin_user = User.query.filter_by(email="admin@admin.com").first()
+        if not admin_user:
+            admin_user = User(
+                email="admin@admin.com",
+                first_name="Admin",
+                last_name="User",
+                company_name="Page2API",
+                user_type="admin"
+            )
+            admin_user.set_password("admin")
+            db.session.add(admin_user)
+            db.session.commit()
+            print("Admin user created successfully")
+        else:
+            # Update existing admin user to ensure correct type
+            admin_user.user_type = "admin"
+            db.session.commit()
+            print("Existing admin user updated")
+    except Exception as e:
+        print(f"Error creating/updating admin user: {str(e)}")
+        db.session.rollback()
 
 # Call this after db initialization
 with app.app_context():

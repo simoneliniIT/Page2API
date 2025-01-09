@@ -1,0 +1,10 @@
+{
+  "id": "conversion_20250109_123249",
+  "converted_content": "[\n  {\n    \"id\": \"eiffel-tower-admission\",\n    \"name\": \"Eiffel Tower Admission Ticket\",\n    \"description\": \"Access to the Eiffel Tower with the option to walk up the stairs or take the elevators to the different levels.\",\n    \"categories\": [\n      \"Attraction\"\n    ],\n    \"pricing\": {\n      \"minimum\": 3.2,\n      \"maximum\": 26.1,\n      \"currency\": \"EUR\"\n    },\n    \"availability\": [\n      {\n        \"days\": [\n          \"MONDAY\",\n          \"TUESDAY\",\n          \"WEDNESDAY\",\n          \"THURSDAY\",\n          \"FRIDAY\",\n          \"SATURDAY\",\n          \"SUNDAY\"\n        ],\n        \"timeslots\": [\n          {\n            \"start\": \"09:30:00\",\n            \"end\": \"22:45:00\"\n          }\n        ]\n      }\n    ],\n    \"location\": {\n      \"coordinates\": {\n        \"latitude\": 48.85837,\n        \"longitude\": 2.294481\n      },\n      \"address\": {\n        \"line1\": \"Champ de Mars, 5 Avenue Anatole France\",\n        \"city\": \"Paris\",\n        \"postalCode\": \"75007\",\n        \"state\": \"\\u00cele-de-France\",\n        \"country\": \"France\"\n      }\n    },\n    \"media\": [\n      {\n        \"url\": \"https://www.toureiffel.paris/themes/custom/tour_eiffel/images/picto-access-ticket.svg\"\n      }\n    ],\n    \"url\": \"https://www.toureiffel.paris/en/rates-opening-times\"\n  }\n]",
+  "original_spec": "https://github.com/headout/api-docs/blob/master/object-models/v2/Product.md",
+  "timestamp": "20250109_123249",
+  "product_ids": [
+    "7"
+  ],
+  "num_products": 1
+}

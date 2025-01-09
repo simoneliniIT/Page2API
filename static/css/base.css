@@ -216,4 +216,20 @@ td {
 
 .fade-in {
     animation: fadeIn 0.3s ease-out forwards;
+}
+
+.admin-link {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #0071e3;
+    color: white;
+    text-decoration: none;
+    border-radius: 16px;
+    font-size: 12px;
+    margin-top: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.admin-link:hover {
+    background: #0077ED;
 } 
