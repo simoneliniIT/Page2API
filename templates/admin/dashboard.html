@@ -3,92 +3,98 @@
 {% block title %}Admin Dashboard - Page2API{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Admin Dashboard</h1>
-                <div class="user-info">
-                    <span class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</span>
-                    <span class="user-role">{{ current_user.user_type }}</span>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary ms-3">Log Out</a>
-                </div>
+<div class="container-fluid py-4">
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 px-4">
+        <h1 class="h2 mb-0">Admin Dashboard</h1>
+        <div class="user-info d-flex align-items-center">
+            <div class="text-end me-3">
+                <div class="fw-bold">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+                <div class="text-muted small">{{ current_user.user_type }}</div>
             </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-primary btn-sm">Log Out</a>
         </div>
     </div>
 
-    <!-- Users Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="mb-0">Users</h2>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Email</th>
-                                    <th>Name</th>
-                                    <th>Company</th>
-                                    <th>Type</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in users %}
-                                <tr>
-                                    <td>{{ user.id }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                    <td>{{ user.company_name }}</td>
-                                    <td><span class="badge bg-{{ 'primary' if user.user_type == 'admin' else 'success' if user.user_type == 'supplier' else 'info' }}">{{ user.user_type }}</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+    <div class="px-4">
+        <!-- Users Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h2 class="h5 mb-0">Users</h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td class="ps-4">{{ user.id }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                <td>{{ user.company_name }}</td>
+                                <td>
+                                    <span class="badge rounded-pill bg-{{ 'primary' if user.user_type == 'admin' else 'success' if user.user_type == 'supplier' else 'info' }}">
+                                        {{ user.user_type }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Template Manager Section -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0">Template Manager</h2>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
-                        Add Template
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>URL</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for template in templates %}
-                                <tr>
-                                    <td>{{ template.name }}</td>
-                                    <td class="text-break">{{ template.url }}</td>
-                                    <td>
-                                        <form action="{{ url_for('delete_template', template_id=template.id) }}" method="POST" style="display: inline;">
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this template?')">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+        <!-- Template Manager Section -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Template Manager</h2>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
+                    <i class="bi bi-plus-lg me-1"></i> Add Template
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4" style="width: 30%">Name</th>
+                                <th>URL</th>
+                                <th style="width: 100px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for template in templates %}
+                            <tr>
+                                <td class="ps-4">{{ template.name }}</td>
+                                <td class="text-break">{{ template.url }}</td>
+                                <td>
+                                    <form action="{{ url_for('delete_template', template_id=template.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this template?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not templates %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">
+                                    No templates added yet
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -115,7 +121,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Template</button>
                 </div>
             </form>
@@ -126,54 +132,54 @@
 
 {% block extra_css %}
 <style>
-.user-info {
-    text-align: right;
-}
-
-.user-name {
-    font-weight: 500;
-    color: #1d1d1f;
-}
-
-.user-role {
-    font-size: 0.875rem;
-    color: #6c757d;
-    text-transform: capitalize;
-    margin-left: 0.5rem;
-}
-
-.table-responsive {
-    margin: 0;
+.container-fluid {
+    max-width: 1400px;
 }
 
 .card {
-    border-radius: 0.5rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+    border-radius: 10px;
 }
 
 .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table > :not(caption) > * > * {
+    padding: 1rem;
+    border-bottom-width: 1px;
+}
+
+.table > tbody > tr:last-child > td {
+    border-bottom: none;
 }
 
 .badge {
     font-weight: 500;
-    padding: 0.5em 0.75em;
+    text-transform: capitalize;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
 }
 
 .text-break {
-    word-break: break-all;
+    word-break: break-word;
 }
 
-h1 {
-    font-size: 2rem;
-    font-weight: 600;
-    margin: 0;
+.modal-content {
+    border: none;
+    border-radius: 10px;
 }
 
-h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
 }
 </style>
 {% endblock %} 
