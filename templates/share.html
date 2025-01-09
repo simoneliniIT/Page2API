@@ -718,40 +718,58 @@
         async function handleSubmit(event) {
             event.preventDefault();
             
-            const form = event.target;
-            const formData = new FormData(form);
-            const conversionType = formData.get('conversion_type');
-            
-            try {
-                const response = await fetch('/convert', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        product_url: formData.get('product_url'),
-                        api_spec: formData.get('api_spec'),
-                        conversion_type: conversionType
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Conversion failed');
-                }
-
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                const formattedOutput = JSON.stringify(JSON.parse(data.content), null, 2);
-                document.getElementById('output').value = formattedOutput;
-                document.getElementById('resultCard').style.display = 'block';
-                document.getElementById('output').dataset.apiSpec = data.feed_spec;
-                document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-            } catch (error) {
-                showAlert('Error during conversion: ' + error.message, 'Conversion Error');
+            const productUrl = document.getElementById('product_url').value;
+            if (!productUrl) {
+                showAlert('Please enter a product URL');
+                return;
             }
+            
+            const conversionType = document.querySelector('input[name="conversionType"]:checked').value;
+            let apiSpec = '';
+            let templateId = '';
+            
+            if (conversionType === 'use_template') {
+                templateId = templateDropdown.value;
+                if (!templateId) {
+                    showAlert('Please select a template');
+                    return;
+                }
+            } else if (conversionType === 'custom_api') {
+                apiSpec = document.getElementById('apiSpec').value;
+                if (!apiSpec) {
+                    showAlert('Please enter an API specification');
+                    return;
+                }
+            }
+            
+            fetch('/convert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_url: productUrl,
+                    api_spec: apiSpec,
+                    template_id: templateId,
+                    conversion_type: conversionType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showAlert(data.error);
+                } else {
+                    const formattedOutput = JSON.stringify(JSON.parse(data.content), null, 2);
+                    document.getElementById('output').value = formattedOutput;
+                    document.getElementById('output').dataset.apiSpec = data.feed_spec;
+                    document.getElementById('resultCard').style.display = 'block';
+                    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred while converting the product');
+            });
         }
 
         async function saveProduct() {
@@ -1120,40 +1138,39 @@
             window.handleSubmit = function(event) {
                 event.preventDefault();
                 
-                const conversionType = document.querySelector('input[name="conversionType"]:checked').value;
-                let apiSpec;
+                const productUrl = document.getElementById('product_url').value;
+                if (!productUrl) {
+                    showAlert('Please enter a product URL');
+                    return;
+                }
                 
-                if (conversionType === 'template') {
-                    apiSpec = templateDropdown.value;
-                    if (!apiSpec) {
+                const conversionType = document.querySelector('input[name="conversionType"]:checked').value;
+                let apiSpec = '';
+                let templateId = '';
+                
+                if (conversionType === 'use_template') {
+                    templateId = templateDropdown.value;
+                    if (!templateId) {
                         showAlert('Please select a template');
                         return;
                     }
-                } else {
+                } else if (conversionType === 'custom_api') {
                     apiSpec = document.getElementById('apiSpec').value;
-                    if (conversionType === 'custom_api' && !apiSpec) {
+                    if (!apiSpec) {
                         showAlert('Please enter an API specification');
                         return;
                     }
                 }
                 
-                // Rest of your existing handleSubmit code...
-                const selectedProducts = Array.from(document.querySelectorAll('input[name="product"]:checked'))
-                    .map(checkbox => checkbox.value);
-                    
-                if (selectedProducts.length === 0) {
-                    showAlert('Please select at least one product');
-                    return;
-                }
-                
-                fetch('/convert-selected', {
+                fetch('/convert', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        product_ids: selectedProducts,
+                        product_url: productUrl,
                         api_spec: apiSpec,
+                        template_id: templateId,
                         conversion_type: conversionType
                     })
                 })
@@ -1162,12 +1179,16 @@
                     if (data.error) {
                         showAlert(data.error);
                     } else {
-                        window.location.href = `/conversion-result/${data.id}`;
+                        const formattedOutput = JSON.stringify(JSON.parse(data.content), null, 2);
+                        document.getElementById('output').value = formattedOutput;
+                        document.getElementById('output').dataset.apiSpec = data.feed_spec;
+                        document.getElementById('resultCard').style.display = 'block';
+                        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('An error occurred while converting the products');
+                    showAlert('An error occurred while converting the product');
                 });
             };
         });
