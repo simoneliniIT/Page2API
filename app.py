@@ -18,14 +18,17 @@ app = Flask(__name__)
 # Use PostgreSQL on Render and SQLite locally
 if os.environ.get('RENDER'):
     database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        print("WARNING: DATABASE_URL not set, falling back to SQLite")
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
-    else:
+    if database_url:
         # Fix potential "postgres://" to "postgresql://" for SQLAlchemy 1.4+
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('postgres://', 'postgresql://')
+        database_url = database_url.replace('postgres://', 'postgresql://')
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        print(f"Using PostgreSQL database: {database_url.split('@')[1] if '@' in database_url else 'unknown'}")
+    else:
+        print("WARNING: DATABASE_URL not set on Render, using SQLite as fallback")
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
+    print("Using SQLite database for local development")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')  # Change this to a secure secret key
