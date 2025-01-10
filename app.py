@@ -12,6 +12,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate, upgrade
 from functools import wraps
+from sqlalchemy import text
 
 app = Flask(__name__)
 
@@ -751,10 +752,10 @@ def init_db():
         print("Dropping all tables...")
         with app.app_context():
             # Drop all tables using raw SQL to avoid dependency issues
-            db.session.execute('DROP TABLE IF EXISTS alembic_version')
-            db.session.execute('DROP TABLE IF EXISTS product')
-            db.session.execute('DROP TABLE IF EXISTS template')
-            db.session.execute('DROP TABLE IF EXISTS user')
+            db.session.execute(text('DROP TABLE IF EXISTS alembic_version'))
+            db.session.execute(text('DROP TABLE IF EXISTS product'))
+            db.session.execute(text('DROP TABLE IF EXISTS template'))
+            db.session.execute(text('DROP TABLE IF EXISTS user'))
             db.session.commit()
             print("Tables dropped successfully")
             
