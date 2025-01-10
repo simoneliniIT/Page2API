@@ -686,9 +686,14 @@ def get_templates():
 # Add this to your initialization code to create admin user
 def create_admin_user():
     try:
+        print("\n=== Creating/Updating Users ===")
+        
         # Create admin user
         admin_user = User.query.filter_by(email="admin@admin.com").first()
+        print(f"Checking for admin user: {'Found' if admin_user else 'Not found'}")
+        
         if not admin_user:
+            print("Creating new admin user...")
             admin_user = User(
                 email="admin@admin.com",
                 first_name="Admin",
@@ -700,15 +705,26 @@ def create_admin_user():
             db.session.add(admin_user)
             db.session.commit()
             print("Admin user created successfully")
+            
+            # Verify admin was created
+            admin_check = User.query.filter_by(email="admin@admin.com").first()
+            print(f"Admin user verification: {'Success' if admin_check else 'Failed'}")
         else:
-            # Update existing admin user to ensure correct type
+            print("Updating existing admin user...")
             admin_user.user_type = "admin"
+            admin_user.first_name = "Admin"  # Ensure all fields are set
+            admin_user.last_name = "User"
+            admin_user.company_name = "Page2API"
+            admin_user.set_password("admin")  # Reset password to default
             db.session.commit()
             print("Existing admin user updated")
 
         # Create test user if doesn't exist
         test_user = User.query.filter_by(email="simone.lini@gmail.com").first()
+        print(f"Checking for test user: {'Found' if test_user else 'Not found'}")
+        
         if not test_user:
+            print("Creating new test user...")
             test_user = User(
                 email="simone.lini@gmail.com",
                 first_name="Simone",
@@ -716,16 +732,20 @@ def create_admin_user():
                 company_name="Page2API",
                 user_type="supplier"
             )
-            test_user.set_password("password")  # Set a default password
+            test_user.set_password("password")
             db.session.add(test_user)
             db.session.commit()
             print("Test user created successfully")
         else:
             print("Test user already exists")
 
+        print("=== User Creation/Update Complete ===\n")
+
     except Exception as e:
         print(f"Error creating/updating users: {str(e)}")
+        traceback.print_exc()
         db.session.rollback()
+        raise  # Re-raise the exception to handle it in the calling function
 
 # Add debug route to check users
 @app.route('/debug-users')
@@ -743,10 +763,28 @@ def debug_users():
 
 # Add route to force database initialization
 @app.route('/init-db')
+@login_required  # Add login requirement for safety
 def init_db():
     try:
         print("\n=== Initializing Database ===")
         print(f"Database URL: {'[SET]' if os.environ.get('DATABASE_URL') else '[NOT SET]'}")
+        
+        # Backup existing users if they exist
+        existing_users = []
+        try:
+            users = User.query.all()
+            for user in users:
+                existing_users.append({
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'company_name': user.company_name,
+                    'password_hash': user.password_hash,
+                    'user_type': user.user_type
+                })
+            print(f"Backed up {len(existing_users)} existing users")
+        except Exception as e:
+            print(f"No existing users found or error backing up: {str(e)}")
         
         # Drop all tables and recreate them
         print("Dropping all tables...")
@@ -770,10 +808,25 @@ def init_db():
             db.session.commit()
             print("Tables created successfully")
             
-            # Create admin and test users
-            print("\nCreating/updating users...")
+            # Restore existing users
+            print("\nRestoring users...")
+            for user_data in existing_users:
+                user = User.query.filter_by(email=user_data['email']).first()
+                if not user:
+                    user = User(
+                        email=user_data['email'],
+                        first_name=user_data['first_name'],
+                        last_name=user_data['last_name'],
+                        company_name=user_data['company_name'],
+                        password_hash=user_data['password_hash'],
+                        user_type=user_data['user_type']
+                    )
+                    db.session.add(user)
+            
+            # Create admin user if it doesn't exist
             create_admin_user()
-            print("Users created/updated successfully")
+            db.session.commit()
+            print("Users restored successfully")
             
             # Get all users to verify
             users = User.query.all()
