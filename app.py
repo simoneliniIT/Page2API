@@ -10,7 +10,7 @@ import traceback
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_migrate import Migrate
+from flask_migrate import Migrate, upgrade
 from functools import wraps
 
 app = Flask(__name__)
@@ -739,14 +739,29 @@ def debug_users():
 def init_db():
     try:
         print("\n=== Initializing Database ===")
+        print(f"Database URL: {'[SET]' if os.environ.get('DATABASE_URL') else '[NOT SET]'}")
         
-        # Create all tables
+        # Drop all tables and recreate them
+        print("Dropping all tables...")
+        db.drop_all()
+        
+        print("Creating all tables...")
         db.create_all()
         print("Tables created successfully")
         
         # Create admin and test users
+        print("\nCreating/updating users...")
         create_admin_user()
         print("Users created/updated successfully")
+        
+        # Run migrations
+        print("\nRunning database migrations...")
+        with app.app_context():
+            upgrade_command = flask_migrate.upgrade()
+            if upgrade_command:
+                print("Migrations applied successfully")
+            else:
+                print("No migrations needed")
         
         # Get all users to verify
         users = User.query.all()
@@ -754,16 +769,25 @@ def init_db():
         for user in users:
             print(f"- User: {user.email} (ID: {user.id}, Type: {user.user_type})")
         
+        # Get all templates
+        templates = Template.query.all()
+        print(f"\nFound {len(templates)} templates")
+        
         print("=== Database Initialization Complete ===\n")
         return jsonify({
             'message': 'Database initialized successfully',
-            'users': [{'email': u.email, 'type': u.user_type} for u in users]
+            'database_url_set': bool(os.environ.get('DATABASE_URL')),
+            'users': [{'email': u.email, 'type': u.user_type} for u in users],
+            'templates_count': len(templates)
         })
         
     except Exception as e:
         print(f"Error initializing database: {str(e)}")
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'error': str(e),
+            'database_url_set': bool(os.environ.get('DATABASE_URL'))
+        }), 500
 
 # Call this after db initialization
 with app.app_context():
