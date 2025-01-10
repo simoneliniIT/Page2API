@@ -749,41 +749,43 @@ def init_db():
         
         # Drop all tables and recreate them
         print("Dropping all tables...")
-        db.drop_all()
-        
-        print("Creating all tables...")
-        db.create_all()
-        print("Tables created successfully")
-        
-        # Create admin and test users
-        print("\nCreating/updating users...")
-        create_admin_user()
-        print("Users created/updated successfully")
-        
-        # Run migrations
-        print("\nRunning database migrations...")
         with app.app_context():
+            # Drop all tables using raw SQL to avoid dependency issues
+            db.session.execute('DROP TABLE IF EXISTS alembic_version')
+            db.session.execute('DROP TABLE IF EXISTS product')
+            db.session.execute('DROP TABLE IF EXISTS template')
+            db.session.execute('DROP TABLE IF EXISTS user')
+            db.session.commit()
+            print("Tables dropped successfully")
+            
+            # Run migrations to create tables
+            print("\nRunning database migrations...")
             from flask_migrate import upgrade as flask_migrate_upgrade
             flask_migrate_upgrade()
             print("Migrations completed")
-        
-        # Get all users to verify
-        users = User.query.all()
-        print(f"\nFound {len(users)} users:")
-        for user in users:
-            print(f"- User: {user.email} (ID: {user.id}, Type: {user.user_type})")
-        
-        # Get all templates
-        templates = Template.query.all()
-        print(f"\nFound {len(templates)} templates")
-        
-        print("=== Database Initialization Complete ===\n")
-        return jsonify({
-            'message': 'Database initialized successfully',
-            'database_url_set': bool(os.environ.get('DATABASE_URL')),
-            'users': [{'email': u.email, 'type': u.user_type} for u in users],
-            'templates_count': len(templates)
-        })
+            
+            # Create admin and test users
+            print("\nCreating/updating users...")
+            create_admin_user()
+            print("Users created/updated successfully")
+            
+            # Get all users to verify
+            users = User.query.all()
+            print(f"\nFound {len(users)} users:")
+            for user in users:
+                print(f"- User: {user.email} (ID: {user.id}, Type: {user.user_type})")
+            
+            # Get all templates
+            templates = Template.query.all()
+            print(f"\nFound {len(templates)} templates")
+            
+            print("=== Database Initialization Complete ===\n")
+            return jsonify({
+                'message': 'Database initialized successfully',
+                'database_url_set': bool(os.environ.get('DATABASE_URL')),
+                'users': [{'email': u.email, 'type': u.user_type} for u in users],
+                'templates_count': len(templates)
+            })
         
     except Exception as e:
         print(f"Error initializing database: {str(e)}")
@@ -793,11 +795,13 @@ def init_db():
             'database_url_set': bool(os.environ.get('DATABASE_URL'))
         }), 500
 
-# Call this after db initialization
-with app.app_context():
-    db.create_all()  # Make sure tables are created
-    create_admin_user()
-
+# Initialize the app only if running directly
 if __name__ == '__main__':
+    with app.app_context():
+        # Run migrations instead of creating tables directly
+        from flask_migrate import upgrade as flask_migrate_upgrade
+        flask_migrate_upgrade()
+        create_admin_user()
+    
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
