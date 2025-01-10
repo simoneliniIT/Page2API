@@ -755,7 +755,7 @@ def init_db():
             db.session.execute(text('DROP TABLE IF EXISTS alembic_version'))
             db.session.execute(text('DROP TABLE IF EXISTS product'))
             db.session.execute(text('DROP TABLE IF EXISTS template'))
-            db.session.execute(text('DROP TABLE IF EXISTS user'))
+            db.session.execute(text('DROP TABLE IF EXISTS "user"'))  # Quote the user table name
             db.session.commit()
             print("Tables dropped successfully")
             
