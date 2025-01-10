@@ -132,7 +132,11 @@ def convert():
         print(f"Product URL: {product_url}")
         
         # Get Claude's response based on conversion type
-        anthropic = Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
+            
+        anthropic = Anthropic(api_key=api_key)
         
         if conversion_type == 'custom_api':
             # Custom API conversion
@@ -244,7 +248,11 @@ def save_product():
         print(f"Current user: {current_user.email} (ID: {current_user.id})")
         
         # Ask Claude to generate a user-friendly name
-        anthropic = Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
+            
+        anthropic = Anthropic(api_key=api_key)
         prompt = f"""Based on this product data:
 {json.dumps(content)}
 
