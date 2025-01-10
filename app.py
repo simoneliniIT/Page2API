@@ -16,25 +16,31 @@ from functools import wraps
 app = Flask(__name__)
 
 # Use PostgreSQL on Render and SQLite locally
+print("\n=== Database Configuration ===")
+print(f"Environment variables:")
+print(f"- RENDER: {os.environ.get('RENDER')}")
+print(f"- DATABASE_URL: {'[SET]' if os.environ.get('DATABASE_URL') else '[NOT SET]'}")
+if os.environ.get('DATABASE_URL'):
+    print(f"- DATABASE_URL value: {os.environ.get('DATABASE_URL').split('@')[1] if '@' in os.environ.get('DATABASE_URL') else '[MALFORMED]'}")
+
 if os.environ.get('RENDER'):
-    print("\nDebugging database configuration:")
-    print(f"RENDER environment detected: {os.environ.get('RENDER')}")
-    
+    print("\nRunning on Render.com")
     database_url = os.environ.get('DATABASE_URL')
-    print(f"DATABASE_URL environment variable: {'[SET]' if database_url else '[NOT SET]'}")
-    
     if database_url:
         # Fix potential "postgres://" to "postgresql://" for SQLAlchemy 1.4+
         database_url = database_url.replace('postgres://', 'postgresql://')
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-        print(f"Using PostgreSQL database: {database_url.split('@')[1] if '@' in database_url else 'unknown'}")
+        print(f"Using PostgreSQL database: {database_url.split('@')[1] if '@' in database_url else '[MALFORMED]'}")
     else:
         print("WARNING: DATABASE_URL not set on Render, using SQLite as fallback")
         print("Please check your Render.com environment variables configuration")
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
 else:
+    print("\nRunning locally")
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
     print("Using SQLite database for local development")
+
+print("=== End Database Configuration ===\n")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')  # Change this to a secure secret key
@@ -757,11 +763,8 @@ def init_db():
         # Run migrations
         print("\nRunning database migrations...")
         with app.app_context():
-            upgrade_command = flask_migrate.upgrade()
-            if upgrade_command:
-                print("Migrations applied successfully")
-            else:
-                print("No migrations needed")
+            migrate.upgrade()  # Use the migrate instance we created earlier
+            print("Migrations completed")
         
         # Get all users to verify
         users = User.query.all()
