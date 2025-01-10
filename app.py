@@ -763,7 +763,8 @@ def init_db():
         # Run migrations
         print("\nRunning database migrations...")
         with app.app_context():
-            migrate.upgrade()  # Use the migrate instance we created earlier
+            from flask_migrate import upgrade as flask_migrate_upgrade
+            flask_migrate_upgrade()
             print("Migrations completed")
         
         # Get all users to verify
