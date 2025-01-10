@@ -765,6 +765,11 @@ def init_db():
             flask_migrate_upgrade()
             print("Migrations completed")
             
+            # Ensure tables are created
+            db.create_all()
+            db.session.commit()
+            print("Tables created successfully")
+            
             # Create admin and test users
             print("\nCreating/updating users...")
             create_admin_user()
