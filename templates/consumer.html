@@ -730,10 +730,12 @@
                 return;
             }
 
+            // Get the button and store its original text
+            const convertAllBtn = document.querySelector('.button.primary');
+            const originalBtnText = convertAllBtn.textContent;
+
             try {
                 // Show loading state
-                const convertAllBtn = document.querySelector('.button.primary');
-                const originalText = convertAllBtn.textContent;
                 convertAllBtn.textContent = 'Converting...';
                 convertAllBtn.disabled = true;
 
@@ -742,6 +744,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'  // Explicitly request JSON response
                     },
                     body: JSON.stringify({
                         api_spec: apiSpec
@@ -749,65 +752,75 @@
                 });
 
                 console.log('Response status:', response.status);
-                let result;
-                const responseText = await response.text();
-                console.log('Raw response:', responseText);
                 
+                // Check if response is ok before trying to parse
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error response:', errorText);
+                    throw new Error('Server error: ' + response.status);
+                }
+
+                // Try to parse the response
+                let result;
                 try {
+                    const responseText = await response.text();
+                    console.log('Raw response:', responseText);
                     result = JSON.parse(responseText);
                     console.log('Parsed response:', result);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('Invalid response format from server');
+                }
+
+                if (result.result_id) {
+                    // Show progress message
+                    showAlert('Conversion started. You will be redirected to the results page when complete.', 'Info');
                     
-                    if (result.result_id) {
-                        // Show progress message
-                        showAlert('Conversion started. You will be redirected to the results page when complete.', 'Info');
+                    // Poll for completion
+                    let attempts = 0;
+                    const maxAttempts = 60; // 5 minutes maximum (with 5-second intervals)
+                    
+                    const checkProgress = async () => {
+                        if (attempts >= maxAttempts) {
+                            showAlert('Conversion is taking longer than expected. Please check the results page manually.', 'Warning');
+                            window.location.href = `/conversion-result/${result.result_id}`;
+                            return;
+                        }
                         
-                        // Poll for completion
-                        let attempts = 0;
-                        const maxAttempts = 60; // 5 minutes maximum (with 5-second intervals)
-                        
-                        const checkProgress = async () => {
-                            if (attempts >= maxAttempts) {
-                                showAlert('Conversion is taking longer than expected. Please check the results page manually.', 'Warning');
+                        try {
+                            const progressResponse = await fetch(`/conversion-result/${result.result_id}`);
+                            if (!progressResponse.ok) {
+                                throw new Error('Failed to check progress');
+                            }
+                            
+                            const progressData = await progressResponse.text();
+                            console.log('Progress check response:', progressData);
+                            
+                            if (progressData.includes('"in_progress":false')) {
+                                console.log('Conversion completed');
                                 window.location.href = `/conversion-result/${result.result_id}`;
                                 return;
                             }
                             
-                            try {
-                                const progressResponse = await fetch(`/conversion-result/${result.result_id}`);
-                                const progressData = await progressResponse.text();
-                                
-                                if (progressData.includes('"in_progress":false')) {
-                                    console.log('Conversion completed');
-                                    window.location.href = `/conversion-result/${result.result_id}`;
-                                    return;
-                                }
-                                
-                                attempts++;
-                                setTimeout(checkProgress, 5000); // Check every 5 seconds
-                            } catch (error) {
-                                console.error('Error checking progress:', error);
-                                setTimeout(checkProgress, 5000); // Retry on error
-                            }
-                        };
-                        
-                        setTimeout(checkProgress, 5000); // Start checking after 5 seconds
-                    }
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    throw new Error('Invalid JSON response from server');
+                            attempts++;
+                            setTimeout(checkProgress, 5000); // Check every 5 seconds
+                        } catch (error) {
+                            console.error('Error checking progress:', error);
+                            setTimeout(checkProgress, 5000); // Retry on error
+                        }
+                    };
+                    
+                    setTimeout(checkProgress, 5000); // Start checking after 5 seconds
+                } else {
+                    showAlert('Conversion completed successfully!', 'Success');
+                    setTimeout(() => location.reload(), 1500);
                 }
-                
-                if (!response.ok) {
-                    throw new Error(result?.error || 'Conversion failed');
-                }
-
             } catch (error) {
                 console.error('Conversion error:', error);
                 showAlert(`Error during conversion: ${error.message}`, 'Error');
             } finally {
-                // Reset button state
-                const convertAllBtn = document.querySelector('.button.primary');
-                convertAllBtn.textContent = originalText;
+                // Reset button state using the stored original text
+                convertAllBtn.textContent = originalBtnText;
                 convertAllBtn.disabled = false;
             }
         }

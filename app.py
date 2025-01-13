@@ -451,12 +451,20 @@ def conversion_result(result_id):
         
         if not os.path.exists(result_path):
             print(f"Result file not found: {result_path}")
+            # Check if it's an AJAX request
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({'error': 'Conversion result not found'}), 404
             return render_template('conversion_result.html', error='Conversion result not found')
             
         with open(result_path, 'r') as f:
             result = json.load(f)
             
         print(f"Successfully loaded conversion result with {len(result.get('products', []))} products")
+        
+        # If it's an AJAX request, return JSON
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify(result)
+            
         return render_template('conversion_result.html', 
                              result=result,
                              timestamp=result.get('timestamp'),
@@ -467,6 +475,9 @@ def conversion_result(result_id):
     except Exception as e:
         print(f"Error in conversion_result: {str(e)}")
         traceback.print_exc()
+        # If it's an AJAX request, return JSON error
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({'error': str(e)}), 500
         return render_template('conversion_result.html', error=str(e))
 
 @app.route('/download-selected', methods=['POST'])
