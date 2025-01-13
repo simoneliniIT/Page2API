@@ -221,7 +221,7 @@ Return ONLY the JSON data with no additional text or explanations."""
         print("Calling Claude API...")
         client = Anthropic(api_key=api_key)
         message = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-latest",
             max_tokens=2048,
             messages=[{
                 "role": "user",
@@ -281,7 +281,7 @@ Please provide a short, user-friendly name for this product (maximum 50 characte
 Return only the name, nothing else. The name should be clear and descriptive."""
 
         message = client.messages.create(
-            model="claude-3-haiku-20240307",
+            model="claude-3-5-haiku-latest",
             max_tokens=100,
             messages=[{
                 "role": "user",
@@ -815,6 +815,178 @@ def init_db():
             'database_url_set': bool(os.environ.get('DATABASE_URL')),
             'error': str(e)
         }), 500
+
+@app.route('/convert-all', methods=['POST'])
+def convert_all():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        api_spec = data.get('api_spec')
+        if not api_spec:
+            return jsonify({'error': 'API specification is required'}), 400
+
+        # Get all products for the current user
+        products = Product.query.filter_by(user_id=current_user.id).all()
+        if not products:
+            return jsonify({'error': 'No products found'}), 404
+
+        # Check if ANTHROPIC_API_KEY is set
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
+
+        client = Anthropic(api_key=api_key)
+        converted_products = []
+
+        for product in products:
+            try:
+                prompt = f"""Given this product data:
+{json.dumps(product.content, indent=2)}
+
+And this target API specification:
+{api_spec}
+
+Please convert the product data to match the target API specification format.
+Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
+
+                message = client.messages.create(
+                    model="claude-3-5-sonnet-latest",
+                    max_tokens=2048,
+                    messages=[{
+                        "role": "user",
+                        "content": prompt
+                    }]
+                )
+                
+                converted_products.append({
+                    'id': product.id,
+                    'original_content': product.content,
+                    'converted_content': message.content[0].text,
+                    'name': product.name,
+                    'timestamp': product.timestamp.isoformat()
+                })
+            except Exception as e:
+                print(f"Error converting product {product.id}: {str(e)}")
+                converted_products.append({
+                    'id': product.id,
+                    'error': str(e),
+                    'name': product.name
+                })
+
+        # Save results to a file
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'conversion_{timestamp}.json'
+        filepath = os.path.join(PRODUCTS_DIR, filename)
+        
+        with open(filepath, 'w') as f:
+            json.dump({
+                'timestamp': datetime.now().isoformat(),
+                'api_spec': api_spec,
+                'products': converted_products
+            }, f, indent=2)
+
+        return jsonify({
+            'message': 'Conversion completed',
+            'result_id': filename,
+            'products': converted_products
+        })
+
+    except Exception as e:
+        print(f"Error during conversion: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/convert-selected', methods=['POST'])
+def convert_selected():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        api_spec = data.get('api_spec')
+        product_ids = data.get('product_ids', [])
+        
+        if not api_spec:
+            return jsonify({'error': 'API specification is required'}), 400
+        if not product_ids:
+            return jsonify({'error': 'No products selected'}), 400
+
+        # Get selected products for the current user
+        products = Product.query.filter(
+            Product.id.in_(product_ids),
+            Product.user_id == current_user.id
+        ).all()
+        
+        if not products:
+            return jsonify({'error': 'No products found'}), 404
+
+        # Check if ANTHROPIC_API_KEY is set
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
+
+        client = Anthropic(api_key=api_key)
+        converted_products = []
+
+        for product in products:
+            try:
+                prompt = f"""Given this product data:
+{json.dumps(product.content, indent=2)}
+
+And this target API specification:
+{api_spec}
+
+Please convert the product data to match the target API specification format.
+Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
+
+                message = client.messages.create(
+                    model="claude-3-5-sonnet-latest",
+                    max_tokens=2048,
+                    messages=[{
+                        "role": "user",
+                        "content": prompt
+                    }]
+                )
+                
+                converted_products.append({
+                    'id': product.id,
+                    'original_content': product.content,
+                    'converted_content': message.content[0].text,
+                    'name': product.name,
+                    'timestamp': product.timestamp.isoformat()
+                })
+            except Exception as e:
+                print(f"Error converting product {product.id}: {str(e)}")
+                converted_products.append({
+                    'id': product.id,
+                    'error': str(e),
+                    'name': product.name
+                })
+
+        # Save results to a file
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'conversion_{timestamp}.json'
+        filepath = os.path.join(PRODUCTS_DIR, filename)
+        
+        with open(filepath, 'w') as f:
+            json.dump({
+                'timestamp': datetime.now().isoformat(),
+                'api_spec': api_spec,
+                'products': converted_products
+            }, f, indent=2)
+
+        return jsonify({
+            'message': 'Conversion completed',
+            'result_id': filename,
+            'products': converted_products
+        })
+
+    except Exception as e:
+        print(f"Error during conversion: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 # Initialize the app only if running directly
 if __name__ == '__main__':
