@@ -983,30 +983,40 @@ Return ONLY the converted data in a clear, structured format, with no additional
 @login_required
 def convert_all():
     try:
+        print("\n=== Starting convert_all ===")
         # Check if user is a distributor or admin
         if current_user.user_type not in ['distributor', 'admin']:
+            print("Access denied: User type not distributor/admin")
             return jsonify({'error': 'Access denied. Only distributors can convert products.'}), 403
 
         data = request.json
         if not data:
+            print("No data provided in request")
             return jsonify({'error': 'No data provided'}), 400
             
         api_spec = data.get('api_spec')
         if not api_spec:
+            print("No API specification provided")
             return jsonify({'error': 'API specification is required'}), 400
 
         # Get selected products or all products
         if 'product_ids' in data:
+            print(f"Converting selected products: {data['product_ids']}")
             products = Product.query.filter(Product.id.in_(data['product_ids'])).all()
         else:
+            print("Converting all products")
             products = Product.query.all()
 
         if not products:
+            print("No products found")
             return jsonify({'error': 'No products found'}), 404
+
+        print(f"Found {len(products)} products to convert")
 
         # Check if ANTHROPIC_API_KEY is set
         api_key = os.environ.get('ANTHROPIC_API_KEY')
         if not api_key:
+            print("ANTHROPIC_API_KEY not set")
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
 
         client = Anthropic(api_key=api_key)
@@ -1017,10 +1027,17 @@ def convert_all():
         # Process products in batches
         for i in range(0, len(products), batch_size):
             batch = products[i:i + batch_size]
+            print(f"\nProcessing batch {i//batch_size + 1}/{(len(products) + batch_size - 1)//batch_size}")
+            
             for j, product in enumerate(batch, 1):
                 try:
                     current_index = i + j
-                    print(f"Converting product {current_index}/{len(products)}: {product.name}")
+                    print(f"\nConverting product {current_index}/{len(products)}: {product.name}")
+                    
+                    # Debug print original content
+                    print(f"Original content type: {type(product.content)}")
+                    print(f"Original content preview: {str(product.content)[:100]}...")
+                    
                     prompt = f"""Given this product data:
 {json.dumps(product.content, indent=2)}
 
@@ -1028,7 +1045,7 @@ And this target API specification:
 {api_spec}
 
 Please convert the product data to match the target API specification format.
-Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
+Return ONLY the converted data in valid JSON format, with no additional text or explanations."""
 
                     message = client.messages.create(
                         model="claude-3-5-sonnet-latest",
@@ -1040,24 +1057,33 @@ Return ONLY the converted data in a clear, structured format, with no additional
                     )
                     
                     converted_content = message.content[0].text.strip()
-                    try:
-                        # Verify the converted content is valid JSON
-                        converted_content = json.loads(converted_content)
-                    except json.JSONDecodeError:
-                        # If not valid JSON, wrap it as a string
-                        converted_content = converted_content
+                    print(f"Raw converted content: {converted_content[:200]}...")
                     
-                    converted_products.append({
-                        'id': product.id,
-                        'original_content': product.content,
-                        'converted_content': converted_content,
-                        'name': product.name,
-                        'timestamp': product.timestamp.isoformat()
-                    })
-                    print(f"Successfully converted product {current_index}/{len(products)}")
+                    try:
+                        # Verify and parse the converted content as JSON
+                        parsed_content = json.loads(converted_content)
+                        print("Successfully parsed converted content as JSON")
+                        
+                        converted_products.append({
+                            'id': product.id,
+                            'original_content': product.content,
+                            'converted_content': parsed_content,
+                            'name': product.name,
+                            'timestamp': product.timestamp.isoformat()
+                        })
+                        print(f"Successfully converted product {current_index}/{len(products)}")
+                    except json.JSONDecodeError as je:
+                        print(f"JSON parsing error: {str(je)}")
+                        has_errors = True
+                        converted_products.append({
+                            'id': product.id,
+                            'error': f"Invalid JSON response: {str(je)}",
+                            'name': product.name
+                        })
+                        
                 except Exception as e:
-                    has_errors = True
                     print(f"Error converting product {product.id}: {str(e)}")
+                    has_errors = True
                     converted_products.append({
                         'id': product.id,
                         'error': str(e),
@@ -1069,16 +1095,24 @@ Return ONLY the converted data in a clear, structured format, with no additional
             filename = f'conversion_{timestamp}.json'
             filepath = os.path.join(PRODUCTS_DIR, filename)
             
+            print(f"\nSaving intermediate results to {filepath}")
             os.makedirs(PRODUCTS_DIR, exist_ok=True)
             
-            with open(filepath, 'w') as f:
-                json.dump({
+            try:
+                result_data = {
                     'timestamp': datetime.now().isoformat(),
                     'api_spec': api_spec,
                     'products': converted_products,
                     'has_errors': has_errors
-                }, f, indent=2)
+                }
+                with open(filepath, 'w') as f:
+                    json.dump(result_data, f, indent=2)
+                print("Successfully saved intermediate results")
+            except Exception as e:
+                print(f"Error saving results: {str(e)}")
+                return jsonify({'error': f'Error saving results: {str(e)}'}), 500
 
+        print("\n=== Conversion completed ===")
         return jsonify({
             'message': 'Conversion completed',
             'result_id': filename,
@@ -1087,7 +1121,7 @@ Return ONLY the converted data in a clear, structured format, with no additional
         })
 
     except Exception as e:
-        print(f"Error during conversion: {str(e)}")
+        print(f"\nError during conversion: {str(e)}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 

@@ -749,8 +749,17 @@
                 });
 
                 console.log('Response status:', response.status);
-                const result = await response.json();
-                console.log('Response data:', result);
+                let result;
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+                
+                try {
+                    result = JSON.parse(responseText);
+                    console.log('Parsed response:', result);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('Invalid JSON response from server');
+                }
                 
                 if (!response.ok) {
                     throw new Error(result.error || 'Conversion failed');
@@ -765,7 +774,7 @@
                 }
             } catch (error) {
                 console.error('Conversion error:', error);
-                showAlert(error.message || 'Error during conversion', 'Error');
+                showAlert(`Error during conversion: ${error.message}`, 'Error');
             } finally {
                 // Reset button state
                 const convertAllBtn = document.querySelector('.button.primary');
