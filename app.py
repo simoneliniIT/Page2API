@@ -1022,12 +1022,29 @@ def convert_all():
         client = Anthropic(api_key=api_key)
         converted_products = []
         has_errors = False
-        batch_size = 5  # Process 5 products at a time
+        batch_size = 3  # Reduced batch size to prevent timeouts
 
-        # Process products in batches
+        # Save initial empty result file to ensure we have a valid result_id
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'conversion_{timestamp}.json'
+        filepath = os.path.join(PRODUCTS_DIR, filename)
+        os.makedirs(PRODUCTS_DIR, exist_ok=True)
+
+        # Initialize result file
+        with open(filepath, 'w') as f:
+            json.dump({
+                'timestamp': datetime.now().isoformat(),
+                'api_spec': api_spec,
+                'products': [],
+                'has_errors': False,
+                'in_progress': True
+            }, f, indent=2)
+
+        # Process products in smaller batches
         for i in range(0, len(products), batch_size):
             batch = products[i:i + batch_size]
             print(f"\nProcessing batch {i//batch_size + 1}/{(len(products) + batch_size - 1)//batch_size}")
+            batch_products = []
             
             for j, product in enumerate(batch, 1):
                 try:
@@ -1064,7 +1081,7 @@ Return ONLY the converted data in valid JSON format, with no additional text or 
                         parsed_content = json.loads(converted_content)
                         print("Successfully parsed converted content as JSON")
                         
-                        converted_products.append({
+                        batch_products.append({
                             'id': product.id,
                             'original_content': product.content,
                             'converted_content': parsed_content,
@@ -1075,7 +1092,7 @@ Return ONLY the converted data in valid JSON format, with no additional text or 
                     except json.JSONDecodeError as je:
                         print(f"JSON parsing error: {str(je)}")
                         has_errors = True
-                        converted_products.append({
+                        batch_products.append({
                             'id': product.id,
                             'error': f"Invalid JSON response: {str(je)}",
                             'name': product.name
@@ -1084,33 +1101,41 @@ Return ONLY the converted data in valid JSON format, with no additional text or 
                 except Exception as e:
                     print(f"Error converting product {product.id}: {str(e)}")
                     has_errors = True
-                    converted_products.append({
+                    batch_products.append({
                         'id': product.id,
                         'error': str(e),
                         'name': product.name
                     })
 
-            # Save intermediate results after each batch
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f'conversion_{timestamp}.json'
-            filepath = os.path.join(PRODUCTS_DIR, filename)
-            
-            print(f"\nSaving intermediate results to {filepath}")
-            os.makedirs(PRODUCTS_DIR, exist_ok=True)
-            
+            # Update result file with batch results
+            converted_products.extend(batch_products)
             try:
-                result_data = {
-                    'timestamp': datetime.now().isoformat(),
-                    'api_spec': api_spec,
-                    'products': converted_products,
-                    'has_errors': has_errors
-                }
+                with open(filepath, 'r') as f:
+                    current_data = json.load(f)
+                
+                current_data['products'] = converted_products
+                current_data['has_errors'] = has_errors
+                current_data['last_updated'] = datetime.now().isoformat()
+                
                 with open(filepath, 'w') as f:
-                    json.dump(result_data, f, indent=2)
-                print("Successfully saved intermediate results")
+                    json.dump(current_data, f, indent=2)
+                print("Successfully updated results file")
             except Exception as e:
-                print(f"Error saving results: {str(e)}")
+                print(f"Error updating results: {str(e)}")
                 return jsonify({'error': f'Error saving results: {str(e)}'}), 500
+
+        # Mark conversion as complete
+        try:
+            with open(filepath, 'r') as f:
+                final_data = json.load(f)
+            
+            final_data['in_progress'] = False
+            final_data['completed_at'] = datetime.now().isoformat()
+            
+            with open(filepath, 'w') as f:
+                json.dump(final_data, f, indent=2)
+        except Exception as e:
+            print(f"Error finalizing results: {str(e)}")
 
         print("\n=== Conversion completed ===")
         return jsonify({
