@@ -131,16 +131,23 @@ def index():
 @app.route('/convert', methods=['POST'])
 def convert():
     try:
-        data = request.get_json()
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
         product_url = data.get('product_url')
-        conversion_type = data.get('conversion_type')
+        conversion_type = data.get('conversion_type', 'structured_json')
         
         if not product_url:
-            return jsonify({'error': 'Product URL is required'}), 400
+            return jsonify({'error': 'No product URL provided'}), 400
             
-        if not conversion_type:
-            return jsonify({'error': 'Conversion type is required'}), 400
+        print(f"Converting URL: {product_url}")
+        print(f"Conversion type: {conversion_type}")
         
+        # Check if ANTHROPIC_API_KEY is set
+        if not os.environ.get('ANTHROPIC_API_KEY'):
+            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
+
         print(f"\nStarting conversion - Type: {conversion_type}")
         print(f"Product URL: {product_url}")
         
@@ -149,7 +156,7 @@ def convert():
         if not api_key:
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
             
-        anthropic = Anthropic(api_key=api_key)
+        client = Anthropic()
         
         if conversion_type == 'custom_api':
             # Custom API conversion
@@ -212,7 +219,6 @@ Important guidelines:
 Return ONLY the JSON data with no additional text or explanations."""
 
         print("Calling Claude API...")
-        client = Anthropic()
         completion = client.completions.create(
             model="claude-2.1",
             max_tokens_to_sample=2048,
