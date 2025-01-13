@@ -1033,7 +1033,6 @@ def convert_all():
         client = Anthropic(api_key=api_key)
         converted_products = []
         has_errors = False
-        batch_size = 2  # Process only 2 products at a time
 
         # Save initial empty result file
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -1049,28 +1048,23 @@ def convert_all():
             'has_errors': False,
             'in_progress': True,
             'total_products': len(products),
-            'processed_products': 0
+            'processed_products': 0,
+            'last_updated': datetime.now().isoformat()
         }
         
         with open(filepath, 'w') as f:
             json.dump(initial_data, f, indent=2)
 
-        # Process products in smaller batches
-        for i in range(0, len(products), batch_size):
-            batch = products[i:i + batch_size]
-            print(f"\nProcessing batch {i//batch_size + 1}/{(len(products) + batch_size - 1)//batch_size}")
-            batch_products = []
-            
-            for j, product in enumerate(batch, 1):
-                try:
-                    current_index = i + j
-                    print(f"\nConverting product {current_index}/{len(products)}: {product.name}")
-                    
-                    # Debug print original content
-                    print(f"Original content type: {type(product.content)}")
-                    print(f"Original content preview: {str(product.content)[:100]}...")
-                    
-                    prompt = f"""Given this product data:
+        # Process one product at a time
+        for i, product in enumerate(products, 1):
+            try:
+                print(f"\nConverting product {i}/{len(products)}: {product.name}")
+                
+                # Debug print original content
+                print(f"Original content type: {type(product.content)}")
+                print(f"Original content preview: {str(product.content)[:100]}...")
+                
+                prompt = f"""Given this product data:
 {json.dumps(product.content, indent=2)}
 
 And this target API specification:
@@ -1079,74 +1073,82 @@ And this target API specification:
 Please convert the product data to match the target API specification format.
 Return ONLY the converted data in valid JSON format, with no additional text or explanations."""
 
-                    message = client.messages.create(
-                        model="claude-3-5-sonnet-latest",
-                        max_tokens=2048,
-                        messages=[{
-                            "role": "user",
-                            "content": prompt
-                        }]
-                    )
+                message = client.messages.create(
+                    model="claude-3-5-sonnet-latest",
+                    max_tokens=2048,
+                    messages=[{
+                        "role": "user",
+                        "content": prompt
+                    }]
+                )
+                
+                converted_content = message.content[0].text.strip()
+                print(f"Raw converted content: {converted_content[:200]}...")
+                
+                try:
+                    # Verify and parse the converted content as JSON
+                    parsed_content = json.loads(converted_content)
+                    print("Successfully parsed converted content as JSON")
                     
-                    converted_content = message.content[0].text.strip()
-                    print(f"Raw converted content: {converted_content[:200]}...")
-                    
-                    try:
-                        # Verify and parse the converted content as JSON
-                        parsed_content = json.loads(converted_content)
-                        print("Successfully parsed converted content as JSON")
-                        
-                        batch_products.append({
-                            'id': product.id,
-                            'original_content': product.content,
-                            'converted_content': parsed_content,
-                            'name': product.name,
-                            'timestamp': product.timestamp.isoformat()
-                        })
-                        print(f"Successfully converted product {current_index}/{len(products)}")
-                    except json.JSONDecodeError as je:
-                        print(f"JSON parsing error: {str(je)}")
-                        has_errors = True
-                        batch_products.append({
-                            'id': product.id,
-                            'error': f"Invalid JSON response: {str(je)}",
-                            'name': product.name
-                        })
-                        
-                except Exception as e:
-                    print(f"Error converting product {product.id}: {str(e)}")
-                    has_errors = True
-                    batch_products.append({
+                    converted_products.append({
                         'id': product.id,
-                        'error': str(e),
+                        'original_content': product.content,
+                        'converted_content': parsed_content,
+                        'name': product.name,
+                        'timestamp': product.timestamp.isoformat()
+                    })
+                    print(f"Successfully converted product {i}/{len(products)}")
+                except json.JSONDecodeError as je:
+                    print(f"JSON parsing error: {str(je)}")
+                    has_errors = True
+                    converted_products.append({
+                        'id': product.id,
+                        'error': f"Invalid JSON response: {str(je)}",
                         'name': product.name
                     })
+                    
+            except Exception as e:
+                print(f"Error converting product {product.id}: {str(e)}")
+                has_errors = True
+                converted_products.append({
+                    'id': product.id,
+                    'error': str(e),
+                    'name': product.name
+                })
 
-                # Update result file after each product
-                converted_products.extend(batch_products)
-                try:
-                    with open(filepath, 'r') as f:
-                        current_data = json.load(f)
-                    
-                    current_data['products'] = converted_products
-                    current_data['has_errors'] = has_errors
-                    current_data['last_updated'] = datetime.now().isoformat()
-                    current_data['processed_products'] = len(converted_products)
-                    
-                    with open(filepath, 'w') as f:
-                        json.dump(current_data, f, indent=2)
-                    print("Successfully updated results file")
-                except Exception as e:
-                    print(f"Error updating results: {str(e)}")
-                    return jsonify({'error': f'Error saving results: {str(e)}'}), 500
+            # Update result file after each product
+            try:
+                current_data = {
+                    'timestamp': datetime.now().isoformat(),
+                    'api_spec': api_spec,
+                    'products': converted_products,
+                    'has_errors': has_errors,
+                    'in_progress': True,
+                    'total_products': len(products),
+                    'processed_products': i,
+                    'last_updated': datetime.now().isoformat()
+                }
+                
+                with open(filepath, 'w') as f:
+                    json.dump(current_data, f, indent=2)
+                print("Successfully updated results file")
+            except Exception as e:
+                print(f"Error updating results: {str(e)}")
+                return jsonify({'error': f'Error saving results: {str(e)}'}), 500
 
         # Mark conversion as complete
         try:
-            with open(filepath, 'r') as f:
-                final_data = json.load(f)
-            
-            final_data['in_progress'] = False
-            final_data['completed_at'] = datetime.now().isoformat()
+            final_data = {
+                'timestamp': datetime.now().isoformat(),
+                'api_spec': api_spec,
+                'products': converted_products,
+                'has_errors': has_errors,
+                'in_progress': False,
+                'total_products': len(products),
+                'processed_products': len(converted_products),
+                'completed_at': datetime.now().isoformat(),
+                'last_updated': datetime.now().isoformat()
+            }
             
             with open(filepath, 'w') as f:
                 json.dump(final_data, f, indent=2)

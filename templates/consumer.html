@@ -736,7 +736,7 @@
 
             try {
                 // Show loading state
-                convertAllBtn.textContent = 'Converting...';
+                convertAllBtn.textContent = 'Starting conversion...';
                 convertAllBtn.disabled = true;
 
                 console.log('Starting conversion of all products...');
@@ -757,7 +757,10 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('Server error response:', errorText);
-                    throw new Error(`Server error: ${response.status}. Please try again with fewer products.`);
+                    if (response.status === 502) {
+                        throw new Error('Server timeout. Please try converting fewer products at a time (5 or less recommended).');
+                    }
+                    throw new Error(`Server error: ${response.status}. Please try again.`);
                 }
 
                 // Try to parse the response
@@ -774,11 +777,11 @@
 
                 if (result.result_id) {
                     // Show progress message
-                    showAlert('Conversion started. You will be redirected to the results page when complete.', 'Info');
+                    showAlert('Conversion started. Progress will be shown here.', 'Info');
                     
                     // Poll for completion
                     let attempts = 0;
-                    const maxAttempts = 120; // 10 minutes maximum (with 5-second intervals)
+                    const maxAttempts = 180; // 15 minutes maximum (with 5-second intervals)
                     
                     const checkProgress = async () => {
                         if (attempts >= maxAttempts) {
@@ -802,8 +805,18 @@
                             console.log('Progress:', progressData);
                             
                             // Update progress in UI
-                            const progress = progressData.processed_products / progressData.total_products;
-                            convertAllBtn.textContent = `Converting... ${Math.round(progress * 100)}%`;
+                            if (progressData.total_products > 0) {
+                                const progress = (progressData.processed_products / progressData.total_products) * 100;
+                                const timeElapsed = new Date(progressData.last_updated) - new Date(progressData.timestamp);
+                                const timePerProduct = timeElapsed / progressData.processed_products;
+                                const remainingProducts = progressData.total_products - progressData.processed_products;
+                                const estimatedTimeRemaining = Math.round((timePerProduct * remainingProducts) / 1000);
+                                
+                                convertAllBtn.textContent = `Converting... ${Math.round(progress)}% (${progressData.processed_products}/${progressData.total_products})`;
+                                if (estimatedTimeRemaining > 0) {
+                                    convertAllBtn.textContent += ` - ~${estimatedTimeRemaining}s remaining`;
+                                }
+                            }
                             
                             if (!progressData.in_progress) {
                                 console.log('Conversion completed');
@@ -829,8 +842,10 @@
                 showAlert(`Error during conversion: ${error.message}`, 'Error');
             } finally {
                 // Reset button state using the stored original text
-                convertAllBtn.textContent = originalBtnText;
-                convertAllBtn.disabled = false;
+                if (!document.location.href.includes('conversion-result')) {
+                    convertAllBtn.textContent = originalBtnText;
+                    convertAllBtn.disabled = false;
+                }
             }
         }
 
