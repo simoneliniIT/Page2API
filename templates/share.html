@@ -18,13 +18,16 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 0 24px;
         }
 
         .header {
             text-align: center;
             margin-bottom: 40px;
+            max-width: 800px;
+            margin: 0 auto 48px;
         }
 
         h1 {
@@ -45,7 +48,8 @@
             border-radius: 24px;
             padding: 40px;
             border: 1px solid #e8e8ed;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
+            max-width: 100%;
         }
 
         .form-group {
@@ -182,51 +186,76 @@
             border-radius: 24px;
             border: 1px solid #e8e8ed;
             overflow-x: auto;
+            max-width: 100%;
+            padding: 0;
         }
 
         .products-table {
             width: 100%;
-            min-width: 800px;
+            min-width: 1000px;
             border-collapse: collapse;
-            font-size: 14px;
+            table-layout: fixed;
         }
 
         .products-table th {
             text-align: left;
             padding: 16px;
             background-color: #f5f5f7;
-            font-weight: 500;
+            font-weight: 600;
             color: #1d1d1f;
             border-bottom: 1px solid #e8e8ed;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
+
+        .products-table th:nth-child(1) { width: 40px; }
+        .products-table th:nth-child(2) { width: 45%; }
+        .products-table th:nth-child(3) { width: 120px; }
+        .products-table th:nth-child(4) { width: 25%; }
+        .products-table th:nth-child(5) { width: 140px; }
 
         .products-table td {
             padding: 16px;
             vertical-align: top;
             border-bottom: 1px solid #e8e8ed;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 0;
         }
 
         .product-title {
             font-weight: 500;
             margin-bottom: 8px;
             color: #1d1d1f;
+            word-wrap: break-word;
+            max-width: 100%;
+            padding-right: 16px;
         }
 
-        .product-preview, .product-full {
+        .product-preview {
+            position: relative;
+            max-width: 100%;
+            overflow: hidden;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+
+        .product-preview pre, .product-full pre {
             font-family: ui-monospace, "SF Mono", Monaco, monospace;
             font-size: 13px;
-            color: #494949;
-            line-height: 1.6;
-        }
-
-        .product-full pre {
-            margin: 8px 0;
             white-space: pre-wrap;
-            word-break: break-all;
+            word-break: break-word;
+            margin: 0;
+            max-width: 100%;
+            overflow-x: hidden;
+            padding-right: 16px;
+            line-height: 1.5;
         }
 
         .feed-spec-cell {
-            width: 25%;
+            word-wrap: break-word;
+            max-width: 100%;
         }
 
         .feed-content {
@@ -234,13 +263,12 @@
             font-size: 13px;
             white-space: pre-wrap;
             word-break: break-word;
-            color: #494949;
             max-width: 100%;
-            overflow-x: auto;
+            overflow-x: hidden;
         }
 
         .date-cell {
-            width: 15%;
+            white-space: nowrap;
             color: #86868b;
             font-size: 13px;
         }
@@ -335,7 +363,6 @@
             margin: 0;
             white-space: pre-wrap;
             word-break: break-word;
-            color: #494949;
             max-width: 100%;
             overflow-x: auto;
         }
@@ -563,16 +590,10 @@
             display: block;
         }
 
-        .products-table th:nth-child(1) { width: 50px; }
-        .products-table th:nth-child(2) { width: 35%; }
-        .products-table th:nth-child(3) { width: 120px; }
-        .products-table th:nth-child(4) { width: 25%; }
-        .products-table th:nth-child(5) { width: 120px; }
-
         .category-cell {
             font-size: 14px;
             color: #494949;
-            min-width: 120px;
+            word-wrap: break-word;
         }
 
         .section-label {
@@ -586,6 +607,8 @@
         .conversion-options {
             display: grid;
             gap: 16px;
+            max-width: 100%;
+            gap: 24px;
         }
 
         .conversion-option {
@@ -645,6 +668,17 @@
             color: #666;
             margin: 0;
             line-height: 1.4;
+        }
+
+        /* Make sure the table header stands out */
+        .products-table thead tr {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Ensure the product content cell doesn't grow */
+        .products-table td:nth-child(2) {
+            max-width: 0;
+            width: 45%;
         }
     </style>
 </head>
