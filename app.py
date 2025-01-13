@@ -149,7 +149,7 @@ def convert():
         if not api_key:
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
             
-        anthropic = Anthropic(api_key=api_key)
+        anthropic = Anthropic(api_key=api_key, proxies=None)
         
         if conversion_type == 'custom_api':
             # Custom API conversion
@@ -265,7 +265,7 @@ def save_product():
         if not api_key:
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
             
-        anthropic = Anthropic(api_key=api_key)
+        anthropic = Anthropic(api_key=api_key, proxies=None)
         prompt = f"""Based on this product data:
 {json.dumps(content)}
 
