@@ -62,7 +62,7 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     company_name = db.Column(db.String(120), nullable=False)
-    password_hash = db.Column(db.String(512))
+    password_hash = db.Column(db.String(512), nullable=True)
     user_type = db.Column(db.String(20), nullable=False)  # 'supplier' or 'distributor'
     # Define the relationship with lazy='joined' to avoid N+1 queries
     products = db.relationship('Product', backref=db.backref('owner', lazy='joined'), lazy='dynamic')
@@ -763,95 +763,49 @@ def debug_users():
 
 # Add route to force database initialization
 @app.route('/init-db')
-@login_required  # Add login requirement for safety
 def init_db():
     try:
         print("\n=== Initializing Database ===")
-        print(f"Database URL: {'[SET]' if os.environ.get('DATABASE_URL') else '[NOT SET]'}")
+        database_url = os.environ.get('DATABASE_URL')
+        print(f"Database URL: {'[SET]' if database_url else '[NOT SET]'}")
         
-        # Backup existing users if they exist
-        existing_users = []
-        try:
-            users = User.query.all()
-            for user in users:
-                existing_users.append({
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'company_name': user.company_name,
-                    'password_hash': user.password_hash,
-                    'user_type': user.user_type
-                })
-            print(f"Backed up {len(existing_users)} existing users")
-        except Exception as e:
-            print(f"No existing users found or error backing up: {str(e)}")
-        
-        # Drop all tables and recreate them
+        # Drop all tables
         print("Dropping all tables...")
         with app.app_context():
-            # Drop all tables using raw SQL to avoid dependency issues
             db.session.execute(text('DROP TABLE IF EXISTS alembic_version'))
             db.session.execute(text('DROP TABLE IF EXISTS product'))
             db.session.execute(text('DROP TABLE IF EXISTS template'))
-            db.session.execute(text('DROP TABLE IF EXISTS "user"'))  # Quote the user table name
+            db.session.execute(text('DROP TABLE IF EXISTS "user"'))
             db.session.commit()
             print("Tables dropped successfully")
             
-            # Run migrations to create tables
-            print("\nRunning database migrations...")
-            from flask_migrate import upgrade as flask_migrate_upgrade
-            flask_migrate_upgrade()
-            print("Migrations completed")
-            
-            # Ensure tables are created
-            db.create_all()
-            db.session.commit()
-            print("Tables created successfully")
-            
-            # Restore existing users
-            print("\nRestoring users...")
-            for user_data in existing_users:
-                user = User.query.filter_by(email=user_data['email']).first()
-                if not user:
-                    user = User(
-                        email=user_data['email'],
-                        first_name=user_data['first_name'],
-                        last_name=user_data['last_name'],
-                        company_name=user_data['company_name'],
-                        password_hash=user_data['password_hash'],
-                        user_type=user_data['user_type']
-                    )
-                    db.session.add(user)
-            
-            # Create admin user if it doesn't exist
-            create_admin_user()
-            db.session.commit()
-            print("Users restored successfully")
-            
-            # Get all users to verify
-            users = User.query.all()
-            print(f"\nFound {len(users)} users:")
-            for user in users:
-                print(f"- User: {user.email} (ID: {user.id}, Type: {user.user_type})")
-            
-            # Get all templates
-            templates = Template.query.all()
-            print(f"\nFound {len(templates)} templates")
-            
-            print("=== Database Initialization Complete ===\n")
-            return jsonify({
-                'message': 'Database initialized successfully',
-                'database_url_set': bool(os.environ.get('DATABASE_URL')),
-                'users': [{'email': u.email, 'type': u.user_type} for u in users],
-                'templates_count': len(templates)
-            })
+            # Explicitly alter the column if it exists
+            try:
+                db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE varchar(512)'))
+                db.session.commit()
+                print("Altered password_hash column length")
+            except Exception as e:
+                print(f"Note: Could not alter column (this is expected if table doesn't exist): {str(e)}")
+        
+        print("Creating all tables...")
+        db.create_all()
+        print("Tables created successfully")
+        
+        # Create admin and test users
+        print("\nCreating/updating users...")
+        create_admin_user()
+        print("Users created/updated successfully")
+        
+        return jsonify({
+            'database_url_set': bool(database_url),
+            'message': 'Database initialized successfully'
+        })
         
     except Exception as e:
         print(f"Error initializing database: {str(e)}")
-        traceback.print_exc()
         return jsonify({
-            'error': str(e),
-            'database_url_set': bool(os.environ.get('DATABASE_URL'))
+            'database_url_set': bool(os.environ.get('DATABASE_URL')),
+            'error': str(e)
         }), 500
 
 # Initialize the app only if running directly
