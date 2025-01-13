@@ -219,14 +219,17 @@ Important guidelines:
 Return ONLY the JSON data with no additional text or explanations."""
 
         print("Calling Claude API...")
-        completion = client.completion(
-            prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
-            model="claude-3-5-sonnet-latest",
-            max_tokens_to_sample=2048,
-            stop_sequences=[HUMAN_PROMPT],
+        client = Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=2048,
+            messages=[{
+                "role": "user",
+                "content": prompt
+            }]
         )
         
-        formatted_output = completion.completion
+        formatted_output = message.content[0].text
         print(f"Got response from Claude ({len(formatted_output)} chars)")
         
         # Return the formatted output with the appropriate spec
@@ -277,14 +280,16 @@ def save_product():
 Please provide a short, user-friendly name for this product (maximum 50 characters).
 Return only the name, nothing else. The name should be clear and descriptive."""
 
-        completion = client.completion(
-            prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
-            model="claude-haiku-latest",
-            max_tokens_to_sample=100,
-            stop_sequences=[HUMAN_PROMPT],
+        message = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=100,
+            messages=[{
+                "role": "user",
+                "content": prompt
+            }]
         )
         
-        product_name = completion.completion.strip()
+        product_name = message.content[0].text.strip()
         print(f"Generated product name: {product_name}")
         
         # Create new Product in database
