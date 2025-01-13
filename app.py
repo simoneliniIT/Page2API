@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
 from bs4 import BeautifulSoup
 import requests
-from anthropic import Anthropic
+from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 import os
 import json
 from datetime import datetime
@@ -212,10 +212,11 @@ Important guidelines:
 Return ONLY the JSON data with no additional text or explanations."""
 
         print("Calling Claude API...")
-        completion = anthropic.completions.create(
+        client = Anthropic()
+        completion = client.completions.create(
             model="claude-2.1",
             max_tokens_to_sample=2048,
-            prompt=f"\n\nHuman: {prompt}\n\nAssistant: ",
+            prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
         )
         
         formatted_output = completion.completion.strip()
@@ -262,17 +263,17 @@ def save_product():
         if not api_key:
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
             
-        anthropic = Anthropic(api_key=api_key)
+        client = Anthropic()
         prompt = f"""Based on this product data:
 {json.dumps(content)}
 
 Please provide a short, user-friendly name for this product (maximum 50 characters).
 Return only the name, nothing else. The name should be clear and descriptive."""
 
-        completion = anthropic.completions.create(
+        completion = client.completions.create(
             model="claude-2.1",
             max_tokens_to_sample=100,
-            prompt=f"\n\nHuman: {prompt}\n\nAssistant: ",
+            prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
         )
         
         product_name = completion.completion.strip()
