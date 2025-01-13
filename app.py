@@ -156,7 +156,7 @@ def convert():
         if not api_key:
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
             
-        client = Anthropic()
+        client = Anthropic(api_key=api_key)
         
         if conversion_type == 'custom_api':
             # Custom API conversion
@@ -219,13 +219,14 @@ Important guidelines:
 Return ONLY the JSON data with no additional text or explanations."""
 
         print("Calling Claude API...")
-        completion = client.completions.create(
-            model="claude-2.1",
-            max_tokens_to_sample=2048,
+        completion = client.completion(
             prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
+            model="claude-2",
+            max_tokens_to_sample=2048,
+            stop_sequences=[HUMAN_PROMPT],
         )
         
-        formatted_output = completion.completion.strip()
+        formatted_output = completion.completion
         print(f"Got response from Claude ({len(formatted_output)} chars)")
         
         # Return the formatted output with the appropriate spec
@@ -269,17 +270,18 @@ def save_product():
         if not api_key:
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
             
-        client = Anthropic()
+        client = Anthropic(api_key=api_key)
         prompt = f"""Based on this product data:
 {json.dumps(content)}
 
 Please provide a short, user-friendly name for this product (maximum 50 characters).
 Return only the name, nothing else. The name should be clear and descriptive."""
 
-        completion = client.completions.create(
-            model="claude-2.1",
-            max_tokens_to_sample=100,
+        completion = client.completion(
             prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
+            model="claude-2",
+            max_tokens_to_sample=100,
+            stop_sequences=[HUMAN_PROMPT],
         )
         
         product_name = completion.completion.strip()
