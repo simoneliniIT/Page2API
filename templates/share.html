@@ -578,6 +578,78 @@
             color: #494949;
             min-width: 120px;
         }
+
+        .section-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .conversion-options {
+            display: grid;
+            gap: 16px;
+        }
+
+        .conversion-option {
+            background: white;
+            border: 2px solid #e8e8ed;
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .conversion-option:hover {
+            border-color: #0071e3;
+            background: #f5f5f7;
+        }
+
+        .conversion-option input[type="radio"] {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            margin: 0;
+            width: 20px;
+            height: 20px;
+            accent-color: #0071e3;
+        }
+
+        .conversion-option.selected {
+            border-color: #0071e3;
+            background: #f5f5f7;
+        }
+
+        .option-content {
+            margin-right: 40px;
+        }
+
+        .option-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .option-icon {
+            font-size: 24px;
+        }
+
+        .option-header h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0;
+        }
+
+        .option-desc {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -604,24 +676,40 @@
             </div>
 
             <div class="form-group mb-3">
-                <label>Conversion Type:</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="conversionType" id="customApi" value="custom_api" checked>
-                    <label class="form-check-label" for="customApi">
-                        Custom Feed Specification
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="conversionType" id="structuredJson" value="structured_json">
-                    <label class="form-check-label" for="structuredJson">
-                        Structured JSON (AI-generated)
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="conversionType" id="template" value="template">
-                    <label class="form-check-label" for="template">
-                        Use Template
-                    </label>
+                <label class="section-label">Conversion Type:</label>
+                <div class="conversion-options">
+                    <div class="conversion-option" onclick="selectConversionType('custom_api')">
+                        <input class="form-check-input" type="radio" name="conversionType" id="customApi" value="custom_api" checked>
+                        <div class="option-content">
+                            <div class="option-header">
+                                <div class="option-icon">📋</div>
+                                <h4>Custom Feed Specification</h4>
+                            </div>
+                            <p class="option-desc">Define your own data structure using a custom API specification</p>
+                        </div>
+                    </div>
+                    
+                    <div class="conversion-option" onclick="selectConversionType('structured_json')">
+                        <input class="form-check-input" type="radio" name="conversionType" id="structuredJson" value="structured_json">
+                        <div class="option-content">
+                            <div class="option-header">
+                                <div class="option-icon">🤖</div>
+                                <h4>Structured JSON (AI-generated)</h4>
+                            </div>
+                            <p class="option-desc">Let AI automatically extract and structure the product data</p>
+                        </div>
+                    </div>
+                    
+                    <div class="conversion-option" onclick="selectConversionType('template')">
+                        <input class="form-check-input" type="radio" name="conversionType" id="template" value="template">
+                        <div class="option-content">
+                            <div class="option-header">
+                                <div class="option-icon">📝</div>
+                                <h4>Use Template</h4>
+                            </div>
+                            <p class="option-desc">Choose from pre-defined templates for popular distribution channels</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1093,6 +1181,38 @@
                 document.getElementById('api_spec').required = false;
             }
         }
+
+        function selectConversionType(type) {
+            // Update radio button
+            document.querySelector(`input[value="${type}"]`).checked = true;
+            
+            // Update visual selection
+            document.querySelectorAll('.conversion-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`input[value="${type}"]`).closest('.conversion-option').classList.add('selected');
+            
+            // Show/hide relevant sections
+            const apiSpecGroup = document.getElementById('apiSpecGroup');
+            const templateSelect = document.getElementById('templateSelect');
+            
+            if (type === 'template') {
+                apiSpecGroup.style.display = 'none';
+                templateSelect.style.display = 'block';
+            } else if (type === 'custom_api') {
+                apiSpecGroup.style.display = 'block';
+                templateSelect.style.display = 'none';
+            } else {
+                apiSpecGroup.style.display = 'none';
+                templateSelect.style.display = 'none';
+            }
+        }
+
+        // Initialize the selected state
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedType = document.querySelector('input[name="conversionType"]:checked').value;
+            selectConversionType(selectedType);
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             const conversionTypeInputs = document.querySelectorAll('input[name="conversionType"]');
