@@ -744,7 +744,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'  // Explicitly request JSON response
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         api_spec: apiSpec
@@ -757,7 +757,7 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('Server error response:', errorText);
-                    throw new Error('Server error: ' + response.status);
+                    throw new Error(`Server error: ${response.status}. Please try again with fewer products.`);
                 }
 
                 // Try to parse the response
@@ -769,7 +769,7 @@
                     console.log('Parsed response:', result);
                 } catch (parseError) {
                     console.error('JSON parse error:', parseError);
-                    throw new Error('Invalid response format from server');
+                    throw new Error('Invalid response format from server. Please try again.');
                 }
 
                 if (result.result_id) {
@@ -778,7 +778,7 @@
                     
                     // Poll for completion
                     let attempts = 0;
-                    const maxAttempts = 60; // 5 minutes maximum (with 5-second intervals)
+                    const maxAttempts = 120; // 10 minutes maximum (with 5-second intervals)
                     
                     const checkProgress = async () => {
                         if (attempts >= maxAttempts) {
@@ -788,15 +788,24 @@
                         }
                         
                         try {
-                            const progressResponse = await fetch(`/conversion-result/${result.result_id}`);
+                            const progressResponse = await fetch(`/conversion-result/${result.result_id}`, {
+                                headers: {
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            
                             if (!progressResponse.ok) {
                                 throw new Error('Failed to check progress');
                             }
                             
-                            const progressData = await progressResponse.text();
-                            console.log('Progress check response:', progressData);
+                            const progressData = await progressResponse.json();
+                            console.log('Progress:', progressData);
                             
-                            if (progressData.includes('"in_progress":false')) {
+                            // Update progress in UI
+                            const progress = progressData.processed_products / progressData.total_products;
+                            convertAllBtn.textContent = `Converting... ${Math.round(progress * 100)}%`;
+                            
+                            if (!progressData.in_progress) {
                                 console.log('Conversion completed');
                                 window.location.href = `/conversion-result/${result.result_id}`;
                                 return;

@@ -1033,23 +1033,27 @@ def convert_all():
         client = Anthropic(api_key=api_key)
         converted_products = []
         has_errors = False
-        batch_size = 3  # Reduced batch size to prevent timeouts
+        batch_size = 2  # Process only 2 products at a time
 
-        # Save initial empty result file to ensure we have a valid result_id
+        # Save initial empty result file
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f'conversion_{timestamp}.json'
         filepath = os.path.join(PRODUCTS_DIR, filename)
         os.makedirs(PRODUCTS_DIR, exist_ok=True)
 
         # Initialize result file
+        initial_data = {
+            'timestamp': datetime.now().isoformat(),
+            'api_spec': api_spec,
+            'products': [],
+            'has_errors': False,
+            'in_progress': True,
+            'total_products': len(products),
+            'processed_products': 0
+        }
+        
         with open(filepath, 'w') as f:
-            json.dump({
-                'timestamp': datetime.now().isoformat(),
-                'api_spec': api_spec,
-                'products': [],
-                'has_errors': False,
-                'in_progress': True
-            }, f, indent=2)
+            json.dump(initial_data, f, indent=2)
 
         # Process products in smaller batches
         for i in range(0, len(products), batch_size):
@@ -1118,22 +1122,23 @@ Return ONLY the converted data in valid JSON format, with no additional text or 
                         'name': product.name
                     })
 
-            # Update result file with batch results
-            converted_products.extend(batch_products)
-            try:
-                with open(filepath, 'r') as f:
-                    current_data = json.load(f)
-                
-                current_data['products'] = converted_products
-                current_data['has_errors'] = has_errors
-                current_data['last_updated'] = datetime.now().isoformat()
-                
-                with open(filepath, 'w') as f:
-                    json.dump(current_data, f, indent=2)
-                print("Successfully updated results file")
-            except Exception as e:
-                print(f"Error updating results: {str(e)}")
-                return jsonify({'error': f'Error saving results: {str(e)}'}), 500
+                # Update result file after each product
+                converted_products.extend(batch_products)
+                try:
+                    with open(filepath, 'r') as f:
+                        current_data = json.load(f)
+                    
+                    current_data['products'] = converted_products
+                    current_data['has_errors'] = has_errors
+                    current_data['last_updated'] = datetime.now().isoformat()
+                    current_data['processed_products'] = len(converted_products)
+                    
+                    with open(filepath, 'w') as f:
+                        json.dump(current_data, f, indent=2)
+                    print("Successfully updated results file")
+                except Exception as e:
+                    print(f"Error updating results: {str(e)}")
+                    return jsonify({'error': f'Error saving results: {str(e)}'}), 500
 
         # Mark conversion as complete
         try:
@@ -1153,7 +1158,9 @@ Return ONLY the converted data in valid JSON format, with no additional text or 
             'message': 'Conversion completed',
             'result_id': filename,
             'products': converted_products,
-            'has_errors': has_errors
+            'has_errors': has_errors,
+            'total_products': len(products),
+            'processed_products': len(converted_products)
         })
 
     except Exception as e:
