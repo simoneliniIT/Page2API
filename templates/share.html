@@ -564,6 +564,12 @@
         .api-spec-section.active {
             display: block;
         }
+
+        .products-table th:nth-child(1) { width: 50px; }  /* Checkbox */
+        .products-table th:nth-child(2) { width: 30%; }   /* Product Title */
+        .products-table th:nth-child(3) { width: 15%; }   /* Category */
+        .products-table th:nth-child(4) { width: 25%; }   /* Feed Format */
+        .products-table th:nth-child(5) { width: 15%; }   /* Saved */
     </style>
 </head>
 <body>
@@ -654,14 +660,10 @@
                     <table class="products-table">
                         <thead>
                             <tr>
-                                <th width="30">
-                                    <input type="checkbox" 
-                                           class="checkbox" 
-                                           onclick="toggleAllCheckboxes(this)"
-                                           title="Select all">
-                                </th>
-                                <th>Product Title</th>
-                                <th>API Specification</th>
+                                <th><input type="checkbox" id="select-all" class="checkbox"></th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Feed Format</th>
                                 <th>Saved</th>
                             </tr>
                         </thead>
@@ -676,16 +678,16 @@
                                 </td>
                                 <td>
                                     <div class="product-title">{{ product.name }}</div>
-                                    <div class="product-preview" id="preview-{{ product.id }}">
-                                        <pre>{{ product.content | tojson(indent=2) }}</pre>
+                                    <div class="product-preview">
+                                        <pre>{{ product.content[:200] }}...</pre>
                                         <div class="fade-overlay"></div>
-                                        <button class="expand-button" onclick="toggleContent('{{ product.id }}')">Show More</button>
                                     </div>
-                                    <div class="product-full hidden" id="full-{{ product.id }}">
-                                        <pre>{{ product.content | tojson(indent=2) }}</pre>
-                                        <button class="expand-button" onclick="toggleContent('{{ product.id }}')">Show Less</button>
+                                    <button class="expand-button" onclick="toggleContent(this)">Show more</button>
+                                    <div class="product-full hidden">
+                                        <pre>{{ product.content }}</pre>
                                     </div>
                                 </td>
+                                <td>{{ product.category }}</td>
                                 <td class="feed-spec-cell">
                                     <div class="feed-content">{{ product.api_spec }}</div>
                                 </td>

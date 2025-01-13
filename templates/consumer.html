@@ -298,10 +298,10 @@
 
         /* Column widths */
         .products-table th:nth-child(1) { width: 50px; }  /* Checkbox */
-        .products-table th:nth-child(2) { width: 35%; }   /* Product Title */
-        .products-table th:nth-child(3) { width: 25%; }   /* Feed Format */
-        .products-table th:nth-child(4) { width: 15%; }   /* Supplier */
-        .products-table th:nth-child(5) { width: 15%; }   /* Saved */
+        .products-table th:nth-child(2) { width: 30%; }   /* Product Title */
+        .products-table th:nth-child(3) { width: 15%; }   /* Category */
+        .products-table th:nth-child(4) { width: 25%; }   /* Feed Format */
+        .products-table th:nth-child(5) { width: 15%; }   /* Supplier */
 
         .products-table th {
             text-align: left;
@@ -661,6 +661,7 @@
                                        title="Select all">
                             </th>
                             <th>Product Title</th>
+                            <th>Category</th>
                             <th>Original Feed Format</th>
                             <th>Supplier</th>
                             <th>Saved</th>
@@ -687,6 +688,7 @@
                                     <button class="expand-button" onclick="toggleContent('{{ product.id }}')">Show Less</button>
                                 </div>
                             </td>
+                            <td>{{ product.category }}</td>
                             <td class="feed-spec-cell">
                                 <div class="feed-content">{{ product.api_spec }}</div>
                             </td>

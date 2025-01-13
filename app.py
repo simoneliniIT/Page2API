@@ -82,6 +82,7 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.JSON, nullable=False)
     name = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(100), nullable=True)  # New column for product category
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     api_spec = db.Column(db.Text)
@@ -268,7 +269,7 @@ def save_product():
         print(f"API Spec: {api_spec[:100] if api_spec else ''}")
         print(f"Current user: {current_user.email} (ID: {current_user.id})")
         
-        # Ask Claude to generate a user-friendly name
+        # Ask Claude to generate a user-friendly name and category
         api_key = os.environ.get('ANTHROPIC_API_KEY')
         if not api_key:
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
@@ -277,8 +278,13 @@ def save_product():
         prompt = f"""Based on this product data:
 {json.dumps(content)}
 
-Please provide a short, user-friendly name for this product (maximum 50 characters).
-Return only the name, nothing else. The name should be clear and descriptive."""
+Please provide two things:
+1. A short, user-friendly name for this product (maximum 50 characters)
+2. A category that best describes this product (e.g., "Tours & Activities", "Accommodation", "Transportation", "Events & Shows", etc.)
+
+Return your response in this exact format:
+Name: [product name]
+Category: [category]"""
 
         message = client.messages.create(
             model="claude-3-5-haiku-latest",
@@ -289,13 +295,21 @@ Return only the name, nothing else. The name should be clear and descriptive."""
             }]
         )
         
-        product_name = message.content[0].text.strip()
+        response = message.content[0].text.strip()
+        name_line = [line for line in response.split('\n') if line.startswith('Name:')][0]
+        category_line = [line for line in response.split('\n') if line.startswith('Category:')][0]
+        
+        product_name = name_line.replace('Name:', '').strip()
+        product_category = category_line.replace('Category:', '').strip()
+        
         print(f"Generated product name: {product_name}")
+        print(f"Generated category: {product_category}")
         
         # Create new Product in database
         product = Product(
-            content=content,  # SQLAlchemy will handle the JSON conversion
+            content=content,
             name=product_name,
+            category=product_category,
             user_id=current_user.id,
             api_spec=api_spec
         )
@@ -308,7 +322,8 @@ Return only the name, nothing else. The name should be clear and descriptive."""
             
         return jsonify({
             'message': 'Product saved successfully',
-            'name': product_name
+            'name': product_name,
+            'category': product_category
         }), 200
     except Exception as e:
         print(f"Error saving product: {str(e)}")
