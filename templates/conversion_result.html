@@ -294,10 +294,15 @@
 </head>
 <body>
     <div class="container">
-        <input type="hidden" id="conversion-timestamp" value="{{ timestamp|tojson|safe }}">
-        <input type="hidden" id="conversion-api-spec" value="{{ api_spec|tojson|safe }}">
-        <input type="hidden" id="conversion-products" value="{{ products|tojson|safe }}">
-        <input type="hidden" id="conversion-has-errors" value="{{ has_errors|tojson|safe }}">
+        <!-- Store the data in a data attribute -->
+        <div id="conversion-data" 
+            data-conversion='{{ {
+                "timestamp": timestamp,
+                "api_spec": api_spec,
+                "products": products,
+                "has_errors": has_errors
+            }|tojson|safe }}'
+        ></div>
             
         <div class="header">
             <h1>Conversion Result</h1>
@@ -361,19 +366,11 @@
     <script>
         function downloadResults() {
             try {
-                // Get values from hidden inputs
-                const timestamp = JSON.parse(document.getElementById('conversion-timestamp').value);
-                const apiSpec = JSON.parse(document.getElementById('conversion-api-spec').value);
-                const products = JSON.parse(document.getElementById('conversion-products').value);
-                const hasErrors = JSON.parse(document.getElementById('conversion-has-errors').value);
+                // Get the data from the data attribute
+                const dataElement = document.getElementById('conversion-data');
+                const results = JSON.parse(dataElement.dataset.conversion);
                 
-                // Create the results object
-                const results = {
-                    timestamp: timestamp,
-                    api_spec: apiSpec,
-                    products: products,
-                    has_errors: hasErrors
-                };
+                console.log('Preparing download with data:', results);
                 
                 // Convert to a JSON string with proper formatting
                 const jsonString = JSON.stringify(results, null, 2);
@@ -399,7 +396,9 @@
                 URL.revokeObjectURL(downloadLink.href);
             } catch (error) {
                 console.error('Error creating download:', error);
-                alert('There was an error preparing the download. Please try again.');
+                const dataElement = document.getElementById('conversion-data');
+                console.error('Raw data:', dataElement.dataset.conversion);
+                alert('There was an error preparing the download. Please check the browser console for details.');
             }
         }
     </script>
