@@ -731,6 +731,12 @@
             }
 
             try {
+                // Show loading state
+                const convertAllBtn = document.querySelector('.button.primary');
+                const originalText = convertAllBtn.textContent;
+                convertAllBtn.textContent = 'Converting...';
+                convertAllBtn.disabled = true;
+
                 console.log('Starting conversion of all products...');
                 const response = await fetch('/convert-all', {
                     method: 'POST',
@@ -750,23 +756,21 @@
                     throw new Error(result.error || 'Conversion failed');
                 }
 
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-
-                // Check if we have a result_id for redirection
                 if (result.result_id) {
                     console.log('Redirecting to result page...');
                     window.location.href = `/conversion-result/${result.result_id}`;
                 } else {
-                    // Display the results directly
                     showAlert('Conversion completed successfully!', 'Success');
-                    // Refresh the page after a short delay
                     setTimeout(() => location.reload(), 1500);
                 }
             } catch (error) {
                 console.error('Conversion error:', error);
-                showAlert('Error during conversion: ' + error.message, 'Error');
+                showAlert(error.message || 'Error during conversion', 'Error');
+            } finally {
+                // Reset button state
+                const convertAllBtn = document.querySelector('.button.primary');
+                convertAllBtn.textContent = 'Convert All';
+                convertAllBtn.disabled = false;
             }
         }
 
@@ -840,8 +844,14 @@
             }
 
             try {
-                console.log('Converting products:', selectedIds);
-                const response = await fetch('/convert-selected', {
+                // Show loading state
+                const convertSelectedBtn = document.querySelector('.button.secondary');
+                const originalText = convertSelectedBtn.textContent;
+                convertSelectedBtn.textContent = 'Converting...';
+                convertSelectedBtn.disabled = true;
+
+                console.log('Converting selected products:', selectedIds);
+                const response = await fetch('/convert-all', {  // Changed from convert-selected to convert-all
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -858,22 +868,21 @@
                     throw new Error(result.error || 'Conversion failed');
                 }
 
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-
-                // Check if we have a result_id for redirection
                 if (result.result_id) {
+                    console.log('Redirecting to result page...');
                     window.location.href = `/conversion-result/${result.result_id}`;
                 } else {
-                    // Display the results directly
                     showAlert('Conversion completed successfully!', 'Success');
-                    // You might want to refresh the page or update the UI here
                     setTimeout(() => location.reload(), 1500);
                 }
             } catch (error) {
                 console.error('Conversion error:', error);
-                showAlert('Error during conversion: ' + error.message, 'Error');
+                showAlert(error.message || 'Error during conversion', 'Error');
+            } finally {
+                // Reset button state
+                const convertSelectedBtn = document.querySelector('.button.secondary');
+                convertSelectedBtn.textContent = 'Convert Selected';
+                convertSelectedBtn.disabled = false;
             }
         }
 

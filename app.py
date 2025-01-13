@@ -1009,9 +1009,9 @@ def convert_all():
         converted_products = []
         has_errors = False
 
-        for product in products:
+        for i, product in enumerate(products, 1):
             try:
-                print(f"Converting product {product.id}: {product.name}")
+                print(f"Converting product {i}/{len(products)}: {product.name}")
                 prompt = f"""Given this product data:
 {json.dumps(product.content, indent=2)}
 
@@ -1030,13 +1030,13 @@ Return ONLY the converted data in a clear, structured format, with no additional
                     }]
                 )
                 
-                converted_content = message.content[0].text
+                converted_content = message.content[0].text.strip()
                 try:
                     # Verify the converted content is valid JSON
-                    json.loads(converted_content)
-                except:
-                    # If not valid JSON, assume it's a string that needs to be parsed
-                    converted_content = json.dumps(converted_content)
+                    converted_content = json.loads(converted_content)
+                except json.JSONDecodeError:
+                    # If not valid JSON, wrap it as a string
+                    converted_content = converted_content
                 
                 converted_products.append({
                     'id': product.id,
@@ -1045,7 +1045,7 @@ Return ONLY the converted data in a clear, structured format, with no additional
                     'name': product.name,
                     'timestamp': product.timestamp.isoformat()
                 })
-                print(f"Successfully converted product {product.id}")
+                print(f"Successfully converted product {i}/{len(products)}")
             except Exception as e:
                 has_errors = True
                 print(f"Error converting product {product.id}: {str(e)}")
