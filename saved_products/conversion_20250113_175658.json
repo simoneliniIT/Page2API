@@ -1,0 +1,219 @@
+{
+  "timestamp": "2025-01-13T17:56:58.375583",
+  "api_spec": "https://github.com/headout/api-docs/blob/master/object-models/v2/Product.md",
+  "products": [
+    {
+      "id": 4,
+      "original_content": {
+        "@context": "http://schema.org",
+        "@type": "Product",
+        "productID": "86th-floor-observatory",
+        "name": "Empire State Building 86th Floor Observatory",
+        "description": "Experience soaring 360-degree open-air views of New York City from the Empire State Building's iconic 86th floor Observation Deck. Feel the heart of NYC pulsing all around you from the sky-high vantage point that made history. Day or night, the views are unforgettable.",
+        "category": "Attraction",
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "USD",
+          "url": "https://www.esbnyc.com/buy-tickets/86th-floor-observatory",
+          "availability": "https://schema.org/InStock",
+          "price": 42,
+          "validFrom": "2023-04-10T00:00:00-04:00"
+        },
+        "image": [
+          "https://www.esbnyc.com/sites/default/files/homepage-lead.jpg",
+          "https://www.esbnyc.com/sites/default/files/homepage-lead-nighttime_2.jpg"
+        ],
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 40.7484405,
+          "longitude": -73.9856667
+        },
+        "url": "https://www.esbnyc.com/buy-tickets/86th-floor-observatory"
+      },
+      "converted_content": "{\n  \"id\": \"86th-floor-observatory\",\n  \"name\": \"Empire State Building 86th Floor Observatory\",\n  \"content\": {\n    \"description\": \"Experience soaring 360-degree open-air views of New York City from the Empire State Building's iconic 86th floor Observation Deck. Feel the heart of NYC pulsing all around you from the sky-high vantage point that made history. Day or night, the views are unforgettable.\"\n  },\n  \"images\": {\n    \"primary\": \"https://www.esbnyc.com/sites/default/files/homepage-lead.jpg\",\n    \"secondary\": [\"https://www.esbnyc.com/sites/default/files/homepage-lead-nighttime_2.jpg\"]\n  },\n  \"currency\": \"USD\",\n  \"basePrice\": 42,\n  \"retail\": {\n    \"price\": 42\n  },\n  \"location\": {\n    \"latitude\": 40.7484405,\n    \"longitude\": -73.9856667\n  },\n  \"inventory\": {\n    \"type\": \"INFINITE\"\n  },\n  \"productType\": \"ATTRACTION\",\n  \"productUrl\": \"https://www.esbnyc.com/buy-tickets/86th-floor-observatory\",\n  \"status\": \"ACTIVE\"\n}",
+      "name": "Empire State Building 86th Floor Observatory",
+      "timestamp": "2025-01-08T20:13:00.490767"
+    },
+    {
+      "id": 5,
+      "original_content": {
+        "product": "Ticket Stairs Second Floor",
+        "productUrl": "https://www.toureiffel.paris/en/rates-offers/ticket-second-floor-stairs",
+        "description": "Discover Paris from the Second floor of the Eiffel Tower!",
+        "includes": [
+          "Access to the Second floor by stairs",
+          "Access to temporary exhibitions"
+        ],
+        "pricing": {
+          "normalPrice": {
+            "adult": 10.4,
+            "child": 2.6,
+            "disabled": 2.6
+          },
+          "reducedPrice": {
+            "adult": 8.9,
+            "child": 2.6,
+            "disabled": 2.6
+          },
+          "conditions": "Child (4-11 years), Disabled person, Student"
+        },
+        "hours": {
+          "open": "9:30 AM",
+          "close": "6:30 PM (last admission at 6:00 PM)"
+        },
+        "meetingPoint": "Ground floor South Pillar",
+        "stairs": {
+          "stairsToClimb": 674,
+          "numberFlights": 30,
+          "restingPlatforms": 5
+        },
+        "secondFloorMeters": 116,
+        "secondFloorElevation": 57
+      },
+      "converted_content": "{\n  \"id\": \"eiffel-tower-stairs-second-floor\",\n  \"name\": \"Ticket Stairs Second Floor\",\n  \"url\": \"https://www.toureiffel.paris/en/rates-offers/ticket-second-floor-stairs\",\n  \"description\": \"Discover Paris from the Second floor of the Eiffel Tower!\",\n  \"shortDescription\": \"Access to the Second floor by stairs\",\n  \"inventoryType\": \"FIXED_START_FIXED_DURATION\",\n  \"variants\": [\n    {\n      \"id\": \"adult\",\n      \"name\": \"Adult\",\n      \"description\": \"Regular adult ticket\",\n      \"pricing\": {\n        \"basePrice\": 10.40,\n        \"reducedPrice\": 8.90\n      }\n    },\n    {\n      \"id\": \"child\",\n      \"name\": \"Child (4-11 years)\",\n      \"description\": \"Children aged 4-11 years\",\n      \"pricing\": {\n        \"basePrice\": 2.60,\n        \"reducedPrice\": 2.60\n      }\n    },\n    {\n      \"id\": \"disabled\",\n      \"name\": \"Disabled\",\n      \"description\": \"Disabled person ticket\",\n      \"pricing\": {\n        \"basePrice\": 2.60,\n        \"reducedPrice\": 2.60\n      }\n    }\n  ],\n  \"inclusions\": [\n    \"Access to the Second floor by stairs\",\n    \"Access to temporary exhibitions\"\n  ],\n  \"additionalInfo\": {\n    \"meetingPoint\": \"Ground floor South Pillar\",\n    \"stairs\": {\n      \"totalStairs\": 674,\n      \"flights\": 30,\n      \"restingPlatforms\": 5\n    },\n    \"elevation\": {\n      \"meters\": 116,\n      \"heightFromGround\": 57\n    }\n  },\n  \"operationalHours\": {\n    \"open\": \"09:30\",\n    \"close\": \"18:30\",\n    \"lastEntry\": \"18:00\"\n  }\n}",
+      "name": "Eiffel Tower Second Floor Stairs Access Ticket",
+      "timestamp": "2025-01-08T20:52:39.454366"
+    },
+    {
+      "id": 6,
+      "original_content": {
+        "productName": "Philips 3000 Series 450 W Blenders",
+        "productId": 17239996,
+        "brand": "Philips",
+        "series": "3000 Series",
+        "powerInWatts": 450,
+        "type": "Blender",
+        "pricing": {
+          "price": 59.9,
+          "currency": "CHF"
+        },
+        "availability": "Available",
+        "description": "Silky smooth green smoothie in seconds. The Philips blender with its 450 W motor can handle even the toughest ingredients. Thanks to the unique ProBlend 4 star blade, it blends fruit, vegetables, ice and other ingredients into your favorite smoothie in seconds.",
+        "features": [
+          "450 W motor",
+          "ProBlend 4 star blade",
+          "Compact design",
+          "Dishwasher-safe accessories"
+        ],
+        "specifications": {
+          "powerInWatts": 450,
+          "capacityInLiters": 1.25,
+          "blendingCapacityInLiters": 1,
+          "operatingTimeInMinutes": 2,
+          "speedSettings": 2,
+          "pulseFunction": true,
+          "materialBladeHousing": "Plastic"
+        },
+        "includedAccessories": [
+          "Blender jar",
+          "Instruction manual"
+        ],
+        "colorName": "White",
+        "colorCode": "HR3655/00"
+      },
+      "converted_content": "{\n  \"id\": \"17239996\",\n  \"name\": \"Philips 3000 Series 450 W Blenders\",\n  \"description\": \"Silky smooth green smoothie in seconds. The Philips blender with its 450 W motor can handle even the toughest ingredients. Thanks to the unique ProBlend 4 star blade, it blends fruit, vegetables, ice and other ingredients into your favorite smoothie in seconds.\",\n  \"currency\": \"CHF\",\n  \"basePrice\": 59.9,\n  \"currentPrice\": 59.9,\n  \"inventoryType\": \"FIXED\",\n  \"available\": true,\n  \"status\": \"ACTIVE\",\n  \"images\": [],\n  \"attributes\": {\n    \"brand\": \"Philips\",\n    \"series\": \"3000 Series\",\n    \"power\": \"450 W\",\n    \"type\": \"Blender\",\n    \"color\": \"White\",\n    \"modelNumber\": \"HR3655/00\",\n    \"capacity\": \"1.25 L\",\n    \"blendingCapacity\": \"1 L\",\n    \"operatingTime\": \"2 minutes\",\n    \"speedSettings\": \"2\",\n    \"pulseFunction\": \"Yes\",\n    \"bladeHousingMaterial\": \"Plastic\"\n  },\n  \"inclusions\": [\n    \"Blender jar\",\n    \"Instruction manual\"\n  ],\n  \"features\": [\n    \"450 W motor\",\n    \"ProBlend 4 star blade\",\n    \"Compact design\",\n    \"Dishwasher-safe accessories\"\n  ]\n}",
+      "name": "Philips 450W ProBlend 4 Star Blender 3000 Series",
+      "timestamp": "2025-01-08T21:52:05.284964"
+    },
+    {
+      "id": 7,
+      "original_content": {
+        "products": [
+          {
+            "id": "eiffel-tower-admission",
+            "name": "Eiffel Tower Admission Ticket",
+            "description": "Access to the Eiffel Tower with the option to walk up the stairs or take the elevators to the different levels.",
+            "categories": [
+              "Attraction"
+            ],
+            "priceRange": {
+              "min": 3.2,
+              "max": 26.1,
+              "currency": "EUR"
+            },
+            "availabilitySchedules": [
+              {
+                "days": [
+                  "MONDAY",
+                  "TUESDAY",
+                  "WEDNESDAY",
+                  "THURSDAY",
+                  "FRIDAY",
+                  "SATURDAY",
+                  "SUNDAY"
+                ],
+                "intervals": [
+                  {
+                    "start": "09:30:00",
+                    "end": "22:45:00"
+                  }
+                ]
+              }
+            ],
+            "locationCoordinates": {
+              "latitude": 48.85837,
+              "longitude": 2.294481
+            },
+            "locationAddress": {
+              "addressLines": [
+                "Champ de Mars, 5 Avenue Anatole France"
+              ],
+              "locality": "Paris",
+              "postalCode": "75007",
+              "region": "\u00cele-de-France",
+              "country": "France"
+            },
+            "images": [
+              {
+                "url": "https://www.toureiffel.paris/themes/custom/tour_eiffel/images/picto-access-ticket.svg"
+              }
+            ],
+            "websiteUrl": "https://www.toureiffel.paris/en/rates-opening-times"
+          }
+        ]
+      },
+      "converted_content": "{\n  \"id\": \"eiffel-tower-admission\",\n  \"name\": \"Eiffel Tower Admission Ticket\",\n  \"description\": \"Access to the Eiffel Tower with the option to walk up the stairs or take the elevators to the different levels.\",\n  \"categories\": [\"ATTRACTION\"],\n  \"image\": \"https://www.toureiffel.paris/themes/custom/tour_eiffel/images/picto-access-ticket.svg\",\n  \"basePrice\": 3.2,\n  \"currency\": \"EUR\",\n  \"variants\": [\n    {\n      \"id\": \"default\",\n      \"name\": \"Standard Admission\",\n      \"basePrice\": 3.2,\n      \"maxPrice\": 26.1\n    }\n  ],\n  \"city\": \"Paris\",\n  \"country\": \"France\",\n  \"location\": {\n    \"latitude\": 48.85837,\n    \"longitude\": 2.294481,\n    \"address\": \"Champ de Mars, 5 Avenue Anatole France\",\n    \"city\": \"Paris\",\n    \"state\": \"\u00cele-de-France\",\n    \"country\": \"France\",\n    \"postalCode\": \"75007\"\n  },\n  \"timing\": {\n    \"type\": \"FIXED\",\n    \"duration\": 0,\n    \"openTime\": \"09:30\",\n    \"closeTime\": \"22:45\"\n  },\n  \"availableDays\": [\"MONDAY\", \"TUESDAY\", \"WEDNESDAY\", \"THURSDAY\", \"FRIDAY\", \"SATURDAY\", \"SUNDAY\"],\n  \"merchantUrl\": \"https://www.toureiffel.paris/en/rates-opening-times\"\n}",
+      "name": "Eiffel Tower Admission Ticket",
+      "timestamp": "2025-01-09T11:31:51.422444"
+    },
+    {
+      "id": 8,
+      "original_content": {
+        "productType": "Eiffel Tower Stair Access Ticket",
+        "accessLevel": "Second Floor",
+        "ticketTypes": {
+          "adult": {
+            "ageRange": "25+ years",
+            "price": 11.3,
+            "currency": "EUR"
+          },
+          "youth": {
+            "ageRange": "12-24 years",
+            "price": 5.6,
+            "currency": "EUR"
+          },
+          "child": {
+            "ageRange": "4-11 years",
+            "price": 2.8,
+            "currency": "EUR"
+          },
+          "youngChild": {
+            "ageRange": "0-3 years",
+            "price": 0,
+            "currency": "EUR"
+          }
+        },
+        "accessDetails": {
+          "stairsToSecondFloor": 669,
+          "heightInMeters": 115
+        },
+        "bookingType": "Online advance ticket",
+        "accessMethod": "Stairs only"
+      },
+      "converted_content": "{\n  \"id\": null,\n  \"name\": \"Eiffel Tower Stair Access Ticket\",\n  \"slug\": \"eiffel-tower-stair-access-ticket\",\n  \"description\": \"Access to the Second Floor of the Eiffel Tower via 669 stairs\",\n  \"type\": \"TICKET\",\n  \"categories\": [\"ATTRACTION\", \"LANDMARK\"],\n  \"variants\": [\n    {\n      \"id\": null,\n      \"name\": \"Adult Ticket\",\n      \"description\": \"Ages 25+ years\",\n      \"inventory\": {\n        \"type\": \"FIXED_START_FIXED_DURATION\",\n        \"available\": null\n      },\n      \"price\": {\n        \"amount\": 11.30,\n        \"currencyCode\": \"EUR\"\n      }\n    },\n    {\n      \"id\": null,\n      \"name\": \"Youth Ticket\",\n      \"description\": \"Ages 12-24 years\",\n      \"inventory\": {\n        \"type\": \"FIXED_START_FIXED_DURATION\",\n        \"available\": null\n      },\n      \"price\": {\n        \"amount\": 5.60,\n        \"currencyCode\": \"EUR\"\n      }\n    },\n    {\n      \"id\": null,\n      \"name\": \"Child Ticket\",\n      \"description\": \"Ages 4-11 years\",\n      \"inventory\": {\n        \"type\": \"FIXED_START_FIXED_DURATION\",\n        \"available\": null\n      },\n      \"price\": {\n        \"amount\": 2.80,\n        \"currencyCode\": \"EUR\"\n      }\n    },\n    {\n      \"id\": null,\n      \"name\": \"Young Child Ticket\",\n      \"description\": \"Ages 0-3 years\",\n      \"inventory\": {\n        \"type\": \"FIXED_START_FIXED_DURATION\",\n        \"available\": null\n      },\n      \"price\": {\n        \"amount\": 0.00,\n        \"currencyCode\": \"EUR\"\n      }\n    }\n  ],\n  \"city\": {\n    \"id\": \"paris\",\n    \"name\": \"Paris\",\n    \"country\": \"FR\"\n  },\n  \"location\": null,\n  \"images\": [],\n  \"extras\": {\n    \"accessLevel\": \"Second Floor\",\n    \"stairsToSecondFloor\": 669,\n    \"heightInMeters\": 115,\n    \"bookingType\": \"Online advance ticket\",\n    \"accessMethod\": \"Stairs only\"\n  }\n}",
+      "name": "Eiffel Tower Second Floor Stairs Ticket",
+      "timestamp": "2025-01-13T16:55:46.106926"
+    }
+  ],
+  "has_errors": false
+}

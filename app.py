@@ -280,7 +280,7 @@ def save_product():
 
 Please provide two things:
 1. A short, user-friendly name for this product (maximum 50 characters)
-2. A category that best describes this product (e.g., "Tours & Activities", "Accommodation", "Transportation", "Events & Shows", etc.)
+2. A category that best describes this product, keeping in mind this is for travel. Pick only one option between "Tours & Activities", "Accommodation", "Transportation", "Events & Shows", "Car Rental", "Vacations", "Airport Transfers". If none of these makes sense, use "Other"
 
 Return your response in this exact format:
 Name: [product name]
