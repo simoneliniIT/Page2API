@@ -995,8 +995,12 @@ def convert_all():
         if not api_spec:
             return jsonify({'error': 'API specification is required'}), 400
 
-        # Get all available products (for distributors, this means all products)
-        products = Product.query.all()
+        # Get selected products or all products
+        if 'product_ids' in data:
+            products = Product.query.filter(Product.id.in_(data['product_ids'])).all()
+        else:
+            products = Product.query.all()
+
         if not products:
             return jsonify({'error': 'No products found'}), 404
 
@@ -1008,11 +1012,16 @@ def convert_all():
         client = Anthropic(api_key=api_key)
         converted_products = []
         has_errors = False
+        batch_size = 5  # Process 5 products at a time
 
-        for i, product in enumerate(products, 1):
-            try:
-                print(f"Converting product {i}/{len(products)}: {product.name}")
-                prompt = f"""Given this product data:
+        # Process products in batches
+        for i in range(0, len(products), batch_size):
+            batch = products[i:i + batch_size]
+            for j, product in enumerate(batch, 1):
+                try:
+                    current_index = i + j
+                    print(f"Converting product {current_index}/{len(products)}: {product.name}")
+                    prompt = f"""Given this product data:
 {json.dumps(product.content, indent=2)}
 
 And this target API specification:
@@ -1021,56 +1030,54 @@ And this target API specification:
 Please convert the product data to match the target API specification format.
 Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
 
-                message = client.messages.create(
-                    model="claude-3-5-sonnet-latest",
-                    max_tokens=2048,
-                    messages=[{
-                        "role": "user",
-                        "content": prompt
-                    }]
-                )
-                
-                converted_content = message.content[0].text.strip()
-                try:
-                    # Verify the converted content is valid JSON
-                    converted_content = json.loads(converted_content)
-                except json.JSONDecodeError:
-                    # If not valid JSON, wrap it as a string
-                    converted_content = converted_content
-                
-                converted_products.append({
-                    'id': product.id,
-                    'original_content': product.content,
-                    'converted_content': converted_content,
-                    'name': product.name,
-                    'timestamp': product.timestamp.isoformat()
-                })
-                print(f"Successfully converted product {i}/{len(products)}")
-            except Exception as e:
-                has_errors = True
-                print(f"Error converting product {product.id}: {str(e)}")
-                converted_products.append({
-                    'id': product.id,
-                    'error': str(e),
-                    'name': product.name
-                })
+                    message = client.messages.create(
+                        model="claude-3-5-sonnet-latest",
+                        max_tokens=2048,
+                        messages=[{
+                            "role": "user",
+                            "content": prompt
+                        }]
+                    )
+                    
+                    converted_content = message.content[0].text.strip()
+                    try:
+                        # Verify the converted content is valid JSON
+                        converted_content = json.loads(converted_content)
+                    except json.JSONDecodeError:
+                        # If not valid JSON, wrap it as a string
+                        converted_content = converted_content
+                    
+                    converted_products.append({
+                        'id': product.id,
+                        'original_content': product.content,
+                        'converted_content': converted_content,
+                        'name': product.name,
+                        'timestamp': product.timestamp.isoformat()
+                    })
+                    print(f"Successfully converted product {current_index}/{len(products)}")
+                except Exception as e:
+                    has_errors = True
+                    print(f"Error converting product {product.id}: {str(e)}")
+                    converted_products.append({
+                        'id': product.id,
+                        'error': str(e),
+                        'name': product.name
+                    })
 
-        # Save results to a file
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'conversion_{timestamp}.json'
-        filepath = os.path.join(PRODUCTS_DIR, filename)
-        
-        # Ensure the directory exists
-        os.makedirs(PRODUCTS_DIR, exist_ok=True)
-        
-        print(f"Saving results to {filepath}")
-        with open(filepath, 'w') as f:
-            json.dump({
-                'timestamp': datetime.now().isoformat(),
-                'api_spec': api_spec,
-                'products': converted_products,
-                'has_errors': has_errors
-            }, f, indent=2)
+            # Save intermediate results after each batch
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'conversion_{timestamp}.json'
+            filepath = os.path.join(PRODUCTS_DIR, filename)
+            
+            os.makedirs(PRODUCTS_DIR, exist_ok=True)
+            
+            with open(filepath, 'w') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'api_spec': api_spec,
+                    'products': converted_products,
+                    'has_errors': has_errors
+                }, f, indent=2)
 
         return jsonify({
             'message': 'Conversion completed',

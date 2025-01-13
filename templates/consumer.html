@@ -943,6 +943,60 @@
                 ]
             });
         }
+
+        async function convertProducts() {
+            const button = document.getElementById('convert-button');
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Converting...';
+            
+            try {
+                const selectedProducts = Array.from(document.querySelectorAll('input[name="product"]:checked')).map(cb => cb.value);
+                if (selectedProducts.length === 0) {
+                    showAlert('Please select at least one product to convert', 'Error');
+                    return;
+                }
+
+                const apiSpec = document.getElementById('api-spec').value;
+                if (!apiSpec) {
+                    showAlert('Please provide an API specification', 'Error');
+                    return;
+                }
+
+                const response = await fetch('/convert-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        product_ids: selectedProducts,
+                        api_spec: apiSpec
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Conversion failed');
+                }
+
+                if (result.has_errors) {
+                    showAlert('Conversion completed with some errors. Check the results for details.', 'Warning');
+                } else {
+                    showAlert('Conversion completed successfully!', 'Success');
+                }
+
+                if (result.result_id) {
+                    window.location.href = `/conversion-result/${result.result_id}`;
+                }
+            } catch (error) {
+                console.error('Error during conversion:', error);
+                showAlert(`Error during conversion: ${error.message}`, 'Error');
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
     </script>
 </body>
 </html> 
