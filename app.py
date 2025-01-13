@@ -817,6 +817,7 @@ def init_db():
         }), 500
 
 @app.route('/convert-all', methods=['POST'])
+@login_required
 def convert_all():
     try:
         data = request.json
@@ -899,6 +900,7 @@ Return ONLY the converted data in a clear, structured format, with no additional
         return jsonify({'error': str(e)}), 500
 
 @app.route('/convert-selected', methods=['POST'])
+@login_required
 def convert_selected():
     try:
         data = request.json
