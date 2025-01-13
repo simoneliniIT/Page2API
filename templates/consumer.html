@@ -731,6 +731,7 @@
             }
 
             try {
+                console.log('Starting conversion of all products...');
                 const response = await fetch('/convert-all', {
                     method: 'POST',
                     headers: {
@@ -741,13 +742,30 @@
                     })
                 });
 
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response data:', result);
+                
                 if (!response.ok) {
-                    throw new Error('Conversion failed');
+                    throw new Error(result.error || 'Conversion failed');
                 }
 
-                const result = await response.json();
-                window.location.href = `/conversion-result/${result.id}`;
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Check if we have a result_id for redirection
+                if (result.result_id) {
+                    console.log('Redirecting to result page...');
+                    window.location.href = `/conversion-result/${result.result_id}`;
+                } else {
+                    // Display the results directly
+                    showAlert('Conversion completed successfully!', 'Success');
+                    // Refresh the page after a short delay
+                    setTimeout(() => location.reload(), 1500);
+                }
             } catch (error) {
+                console.error('Conversion error:', error);
                 showAlert('Error during conversion: ' + error.message, 'Error');
             }
         }
@@ -834,16 +852,25 @@
                     })
                 });
 
+                const result = await response.json();
+                
                 if (!response.ok) {
-                    throw new Error('Conversion failed');
+                    throw new Error(result.error || 'Conversion failed');
                 }
 
-                const result = await response.json();
                 if (result.error) {
                     throw new Error(result.error);
                 }
 
-                window.location.href = `/conversion-result/${result.id}`;
+                // Check if we have a result_id for redirection
+                if (result.result_id) {
+                    window.location.href = `/conversion-result/${result.result_id}`;
+                } else {
+                    // Display the results directly
+                    showAlert('Conversion completed successfully!', 'Success');
+                    // You might want to refresh the page or update the UI here
+                    setTimeout(() => location.reload(), 1500);
+                }
             } catch (error) {
                 console.error('Conversion error:', error);
                 showAlert('Error during conversion: ' + error.message, 'Error');

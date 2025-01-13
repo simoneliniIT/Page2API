@@ -303,9 +303,10 @@
 
         .product-preview {
             position: relative;
-            max-height: 96px; /* Approximately 4 lines at 24px line-height */
+            max-height: 120px;
             overflow: hidden;
             margin-top: 8px;
+            margin-bottom: 32px;
         }
 
         .button:disabled {
@@ -346,7 +347,7 @@
 
         .expand-button {
             position: absolute;
-            bottom: 0;
+            bottom: -24px;
             left: 0;
             background: none;
             border: none;
@@ -355,6 +356,7 @@
             font-size: 13px;
             cursor: pointer;
             font-weight: 500;
+            z-index: 2;
         }
 
         .expand-button:hover {
@@ -565,11 +567,17 @@
             display: block;
         }
 
-        .products-table th:nth-child(1) { width: 50px; }  /* Checkbox */
-        .products-table th:nth-child(2) { width: 30%; }   /* Product Title */
-        .products-table th:nth-child(3) { width: 15%; }   /* Category */
-        .products-table th:nth-child(4) { width: 25%; }   /* Feed Format */
-        .products-table th:nth-child(5) { width: 15%; }   /* Saved */
+        .products-table th:nth-child(1) { width: 50px; }
+        .products-table th:nth-child(2) { width: auto; }
+        .products-table th:nth-child(3) { width: 120px; }
+        .products-table th:nth-child(4) { width: 200px; }
+        .products-table th:nth-child(5) { width: 120px; }
+
+        .category-cell {
+            font-size: 14px;
+            color: #494949;
+            min-width: 120px;
+        }
     </style>
 </head>
 <body>
@@ -681,13 +689,14 @@
                                     <div class="product-preview">
                                         <pre>{{ product.content|truncate(200, True, '...') }}</pre>
                                         <div class="fade-overlay"></div>
+                                        <button class="expand-button" onclick="toggleContent(this)">Show more</button>
                                     </div>
-                                    <button class="expand-button" onclick="toggleContent(this)">Show more</button>
                                     <div class="product-full hidden">
                                         <pre>{{ product.content }}</pre>
+                                        <button class="expand-button" onclick="toggleContent(this)">Show less</button>
                                     </div>
                                 </td>
-                                <td>{{ product.category }}</td>
+                                <td class="category-cell">{{ product.category }}</td>
                                 <td class="feed-spec-cell">
                                     <div class="feed-content">{{ product.api_spec }}</div>
                                 </td>
