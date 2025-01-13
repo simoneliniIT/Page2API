@@ -679,7 +679,7 @@
                                 <td>
                                     <div class="product-title">{{ product.name }}</div>
                                     <div class="product-preview">
-                                        <pre>{{ product.content[:200] }}...</pre>
+                                        <pre>{{ product.content|truncate(200, True, '...') }}</pre>
                                         <div class="fade-overlay"></div>
                                     </div>
                                     <button class="expand-button" onclick="toggleContent(this)">Show more</button>
