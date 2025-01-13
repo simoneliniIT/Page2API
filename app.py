@@ -410,19 +410,32 @@ def consumer():
 @login_required
 def conversion_result(result_id):
     try:
+        # Ensure the products directory exists
+        os.makedirs(PRODUCTS_DIR, exist_ok=True)
+        
         # Get result from file
-        result_path = os.path.join(PRODUCTS_DIR, f'{result_id}.json')
+        result_path = os.path.join(PRODUCTS_DIR, secure_filename(result_id))
+        print(f"Looking for conversion result at: {result_path}")
+        
         if not os.path.exists(result_path):
-            return 'Conversion result not found', 404
+            print(f"Result file not found: {result_path}")
+            return render_template('conversion_result.html', error='Conversion result not found')
             
         with open(result_path, 'r') as f:
             result = json.load(f)
             
-        return render_template('conversion_result.html', result=result)
+        print(f"Successfully loaded conversion result with {len(result.get('products', []))} products")
+        return render_template('conversion_result.html', 
+                             result=result,
+                             timestamp=result.get('timestamp'),
+                             api_spec=result.get('api_spec'),
+                             products=result.get('products', []),
+                             has_errors=result.get('has_errors', False))
+                             
     except Exception as e:
         print(f"Error in conversion_result: {str(e)}")
         traceback.print_exc()
-        return str(e), 500
+        return render_template('conversion_result.html', error=str(e))
 
 @app.route('/download-selected', methods=['POST'])
 def download_selected():
