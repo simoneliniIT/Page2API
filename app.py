@@ -1030,53 +1030,34 @@ def convert_all():
             print("ANTHROPIC_API_KEY not set")
             return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
 
-        # Save initial empty result file
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'conversion_{timestamp}.json'
-        filepath = os.path.join(PRODUCTS_DIR, filename)
-        os.makedirs(PRODUCTS_DIR, exist_ok=True)
+        client = Anthropic(api_key=api_key)
+        converted_products = []
+        has_errors = False
 
-        # Initialize result file
-        initial_data = {
-            'timestamp': datetime.now().isoformat(),
-            'api_spec': api_spec,
-            'products': [],
-            'has_errors': False,
-            'in_progress': True,
-            'total_products': len(products),
-            'processed_products': 0,
-            'last_updated': datetime.now().isoformat()
-        }
-        
-        with open(filepath, 'w') as f:
-            json.dump(initial_data, f, indent=2)
-
-        # Prepare all products data in a single request
-        products_data = []
+        # Prepare all products for a single conversion
+        all_products_data = []
         for product in products:
-            products_data.append({
+            all_products_data.append({
                 'id': product.id,
-                'name': product.name,
                 'content': product.content
             })
 
-        # Create a single prompt with all products
+        # Convert all products in a single request
         prompt = f"""Given these products:
-{json.dumps(products_data, indent=2)}
+{json.dumps(all_products_data, indent=2)}
 
 And this target API specification:
 {api_spec}
 
-Please convert ALL products to match the target API specification format.
-Return an array of converted products, where each item contains:
-1. 'id': The original product ID
-2. 'converted_content': The converted data matching the API specification
+Please convert each product to match the target API specification format.
+For each product, preserve its ID and convert its content.
 
-Return ONLY a valid JSON array with the converted products, no additional text or explanations.
-Each converted product should strictly follow the API specification format."""
+Return ONLY an array of objects, where each object has:
+1. id: The original product ID
+2. content: The converted content matching the API specification
 
-        print("\nSending request to Claude...")
-        client = Anthropic(api_key=api_key)
+Return the array in valid JSON format, with no additional text or explanations."""
+
         message = client.messages.create(
             model="claude-3-5-sonnet-latest",
             max_tokens=4096,
@@ -1087,24 +1068,30 @@ Each converted product should strictly follow the API specification format."""
         )
         
         converted_content = message.content[0].text.strip()
-        print(f"Received response from Claude")
         
         try:
-            # Parse the converted content
+            # Parse the response as JSON
             converted_results = json.loads(converted_content)
-            print("Successfully parsed conversion results")
             
-            # Process the results
-            converted_products = []
-            has_errors = False
+            # Ensure we have an array
+            if not isinstance(converted_results, list):
+                converted_results = [converted_results]
+                
+            # Save results to a file
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'conversion_{timestamp}.json'
+            filepath = os.path.join(PRODUCTS_DIR, filename)
             
+            os.makedirs(PRODUCTS_DIR, exist_ok=True)
+            
+            # Process each converted product
             for result in converted_results:
                 try:
                     product = next(p for p in products if str(p.id) == str(result['id']))
                     converted_products.append({
                         'id': product.id,
                         'original_content': product.content,
-                        'converted_content': result['converted_content'],
+                        'converted_content': result['content'],
                         'name': product.name,
                         'timestamp': product.timestamp.isoformat()
                     })
@@ -1117,36 +1104,26 @@ Each converted product should strictly follow the API specification format."""
                         'name': next((p.name for p in products if str(p.id) == str(result.get('id'))), 'Unknown')
                     })
             
-        except json.JSONDecodeError as je:
-            print(f"JSON parsing error: {str(je)}")
-            return jsonify({'error': f'Invalid JSON response from conversion: {str(je)}'}), 500
-
-        # Save final results
-        final_data = {
-            'timestamp': datetime.now().isoformat(),
-            'api_spec': api_spec,
-            'products': converted_products,
-            'has_errors': has_errors,
-            'in_progress': False,
-            'total_products': len(products),
-            'processed_products': len(converted_products),
-            'completed_at': datetime.now().isoformat(),
-            'last_updated': datetime.now().isoformat()
-        }
-        
-        with open(filepath, 'w') as f:
-            json.dump(final_data, f, indent=2)
-
-        print("\n=== Conversion completed ===")
-        return jsonify({
-            'message': 'Conversion completed',
-            'result_id': filename,
-            'products': converted_products,
-            'has_errors': has_errors,
-            'total_products': len(products),
-            'processed_products': len(converted_products)
-        })
-
+            # Save the final results
+            with open(filepath, 'w') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'api_spec': api_spec,
+                    'products': converted_products,
+                    'has_errors': has_errors
+                }, f, indent=2)
+            
+            return jsonify({
+                'message': 'Conversion completed',
+                'result_id': filename,
+                'products': converted_products,
+                'has_errors': has_errors
+            })
+            
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON response: {str(e)}")
+            return jsonify({'error': 'Invalid JSON response from conversion'}), 500
+            
     except Exception as e:
         print(f"\nError during conversion: {str(e)}")
         traceback.print_exc()
