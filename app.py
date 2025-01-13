@@ -221,7 +221,7 @@ Return ONLY the JSON data with no additional text or explanations."""
         print("Calling Claude API...")
         completion = client.completion(
             prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
-            model="claude-2",
+            model="claude-3-5-sonnet-latest",
             max_tokens_to_sample=2048,
             stop_sequences=[HUMAN_PROMPT],
         )
@@ -279,7 +279,7 @@ Return only the name, nothing else. The name should be clear and descriptive."""
 
         completion = client.completion(
             prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
-            model="claude-2",
+            model="claude-haiku-latest",
             max_tokens_to_sample=100,
             stop_sequences=[HUMAN_PROMPT],
         )
