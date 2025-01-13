@@ -294,11 +294,10 @@
 </head>
 <body>
     <div class="container">
-        <input type="hidden" id="conversion-data" 
-            data-timestamp="{{ timestamp|tojson|safe }}"
-            data-api-spec="{{ api_spec|tojson|safe }}"
-            data-products="{{ products|tojson|safe }}"
-            data-has-errors="{{ has_errors|tojson|safe }}">
+        <input type="hidden" id="conversion-timestamp" value="{{ timestamp|tojson|safe }}">
+        <input type="hidden" id="conversion-api-spec" value="{{ api_spec|tojson|safe }}">
+        <input type="hidden" id="conversion-products" value="{{ products|tojson|safe }}">
+        <input type="hidden" id="conversion-has-errors" value="{{ has_errors|tojson|safe }}">
             
         <div class="header">
             <h1>Conversion Result</h1>
@@ -361,39 +360,47 @@
 
     <script>
         function downloadResults() {
-            // Get the data element
-            const dataElement = document.getElementById('conversion-data');
-            
-            // Create the results object from data attributes
-            const results = {
-                timestamp: JSON.parse(dataElement.dataset.timestamp),
-                api_spec: JSON.parse(dataElement.dataset.apiSpec),
-                products: JSON.parse(dataElement.dataset.products),
-                has_errors: JSON.parse(dataElement.dataset.hasErrors)
-            };
-            
-            // Convert to a JSON string with proper formatting
-            const jsonString = JSON.stringify(results, null, 2);
-            
-            // Create a blob with the JSON data
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            
-            // Create a temporary download link
-            const downloadLink = document.createElement('a');
-            downloadLink.href = URL.createObjectURL(blob);
-            
-            // Format current date for filename
-            const date = new Date();
-            const formattedDate = date.toISOString().slice(0,19).replace(/[:]/g, '');
-            downloadLink.download = `conversion_results_${formattedDate}.json`;
-            
-            // Trigger the download
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-            
-            // Clean up the URL object
-            URL.revokeObjectURL(downloadLink.href);
+            try {
+                // Get values from hidden inputs
+                const timestamp = JSON.parse(document.getElementById('conversion-timestamp').value);
+                const apiSpec = JSON.parse(document.getElementById('conversion-api-spec').value);
+                const products = JSON.parse(document.getElementById('conversion-products').value);
+                const hasErrors = JSON.parse(document.getElementById('conversion-has-errors').value);
+                
+                // Create the results object
+                const results = {
+                    timestamp: timestamp,
+                    api_spec: apiSpec,
+                    products: products,
+                    has_errors: hasErrors
+                };
+                
+                // Convert to a JSON string with proper formatting
+                const jsonString = JSON.stringify(results, null, 2);
+                
+                // Create a blob with the JSON data
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                
+                // Create a temporary download link
+                const downloadLink = document.createElement('a');
+                downloadLink.href = URL.createObjectURL(blob);
+                
+                // Format current date for filename
+                const date = new Date();
+                const formattedDate = date.toISOString().slice(0,19).replace(/[:]/g, '');
+                downloadLink.download = `conversion_results_${formattedDate}.json`;
+                
+                // Trigger the download
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                
+                // Clean up the URL object
+                URL.revokeObjectURL(downloadLink.href);
+            } catch (error) {
+                console.error('Error creating download:', error);
+                alert('There was an error preparing the download. Please try again.');
+            }
         }
     </script>
 </body>
