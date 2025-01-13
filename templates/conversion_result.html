@@ -18,8 +18,9 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 40px 20px;
         }
 
         .header {
@@ -28,9 +29,8 @@
         }
 
         h1 {
-            font-size: 36px;
-            font-weight: 600;
-            margin-bottom: 16px;
+            font-size: 32px;
+            margin-bottom: 24px;
             color: #1d1d1f;
         }
 
@@ -42,17 +42,15 @@
 
         .result-card {
             background: white;
-            border-radius: 24px;
-            padding: 40px;
-            border: 1px solid #e8e8ed;
-            margin-bottom: 24px;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .error-message {
             color: #ff3b30;
-            text-align: center;
-            font-size: 18px;
-            margin: 40px 0;
+            font-size: 14px;
+            margin-top: 8px;
         }
 
         .info-section {
@@ -79,37 +77,36 @@
 
         .product-item {
             background: #f5f5f7;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 16px;
+            border-radius: 8px;
+            padding: 16px;
         }
 
         .product-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .product-name {
-            font-size: 18px;
-            font-weight: 500;
+            font-size: 16px;
+            margin: 0;
             color: #1d1d1f;
         }
 
         .product-status {
             font-size: 14px;
             padding: 4px 12px;
-            border-radius: 980px;
+            border-radius: 12px;
         }
 
         .status-success {
-            background-color: #34c759;
+            background: #34c759;
             color: white;
         }
 
         .status-error {
-            background-color: #ff3b30;
+            background: #ff3b30;
             color: white;
         }
 
@@ -157,10 +154,152 @@
         .button.secondary:hover {
             background-color: #d8d8d8;
         }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .result-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .timestamp {
+            color: #86868b;
+            font-size: 14px;
+        }
+
+        .error-badge {
+            background: #ff3b30;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .button.primary {
+            background: #0071e3;
+            color: white;
+        }
+
+        .button.secondary {
+            background: #e8e8ed;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .api-spec {
+            background: #f5f5f7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 32px;
+        }
+
+        .api-spec h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #1d1d1f;
+        }
+
+        .api-spec pre {
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #494949;
+        }
+
+        .products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .product-item {
+            background: #f5f5f7;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .product-header h4 {
+            font-size: 16px;
+            margin: 0;
+            color: #1d1d1f;
+        }
+
+        .status-success {
+            background: #34c759;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .status-error {
+            background: #ff3b30;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .error-message {
+            color: #ff3b30;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .json-content {
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #494949;
+            margin: 0;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <input type="hidden" id="conversion-data" 
+            data-timestamp="{{ timestamp|tojson|safe }}"
+            data-api-spec="{{ api_spec|tojson|safe }}"
+            data-products="{{ products|tojson|safe }}"
+            data-has-errors="{{ has_errors|tojson|safe }}">
+            
         <div class="header">
             <h1>Conversion Result</h1>
             {% if error %}
@@ -172,47 +311,45 @@
 
         {% if not error %}
             <div class="result-card">
-                <div class="info-section">
-                    <div class="info-label">Conversion Time</div>
-                    <div class="info-value">{{ timestamp }}</div>
-                </div>
-
-                <div class="info-section">
-                    <div class="info-label">API Specification</div>
-                    <div class="info-value">
-                        <pre>{{ api_spec }}</pre>
+                <div class="result-header">
+                    <div class="result-info">
+                        <div class="timestamp">Converted on: {{ timestamp }}</div>
+                        {% if has_errors %}
+                            <div class="error-badge">Some products had errors</div>
+                        {% endif %}
+                    </div>
+                    <div class="button-group">
+                        <button class="button primary" onclick="downloadResults()">
+                            Download Results
+                        </button>
+                        <a href="/consumer" class="button secondary">Back to Products</a>
                     </div>
                 </div>
 
-                <div class="products-section">
-                    <h2>Converted Products ({{ products|length }})</h2>
-                    {% for product in products %}
-                        <div class="product-item">
-                            <div class="product-header">
-                                <div class="product-name">{{ product.name }}</div>
-                                {% if product.error %}
-                                    <div class="product-status status-error">Error</div>
-                                {% else %}
-                                    <div class="product-status status-success">Success</div>
-                                {% endif %}
-                            </div>
-
-                            {% if product.error %}
-                                <div class="error-message">{{ product.error }}</div>
-                            {% else %}
-                                <div class="product-content">
-                                    <pre>{{ product.converted_content }}</pre>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+                <div class="api-spec">
+                    <h3>API Specification Used</h3>
+                    <pre>{{ api_spec }}</pre>
                 </div>
 
-                <div class="button-group">
-                    <a href="{{ url_for('consumer') }}" class="button secondary">Back to Products</a>
-                    {% if not has_errors %}
-                        <button class="button" onclick="downloadAll()">Download All</button>
-                    {% endif %}
+                <h3>Converted Products</h3>
+                <div class="products-list">
+                    {% for product in products %}
+                    <div class="product-item">
+                        <div class="product-header">
+                            <h4>{{ product.name }}</h4>
+                            {% if product.error %}
+                                <span class="status-error">Error</span>
+                            {% else %}
+                                <span class="status-success">Success</span>
+                            {% endif %}
+                        </div>
+                        {% if product.error %}
+                            <div class="error-message">{{ product.error }}</div>
+                        {% else %}
+                            <pre class="json-content">{{ product.converted_content | tojson(indent=2) }}</pre>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         {% else %}
@@ -223,9 +360,40 @@
     </div>
 
     <script>
-        function downloadAll() {
-            // Implementation for downloading all converted products
-            alert('Download functionality will be implemented soon');
+        function downloadResults() {
+            // Get the data element
+            const dataElement = document.getElementById('conversion-data');
+            
+            // Create the results object from data attributes
+            const results = {
+                timestamp: JSON.parse(dataElement.dataset.timestamp),
+                api_spec: JSON.parse(dataElement.dataset.apiSpec),
+                products: JSON.parse(dataElement.dataset.products),
+                has_errors: JSON.parse(dataElement.dataset.hasErrors)
+            };
+            
+            // Convert to a JSON string with proper formatting
+            const jsonString = JSON.stringify(results, null, 2);
+            
+            // Create a blob with the JSON data
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            
+            // Create a temporary download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            
+            // Format current date for filename
+            const date = new Date();
+            const formattedDate = date.toISOString().slice(0,19).replace(/[:]/g, '');
+            downloadLink.download = `conversion_results_${formattedDate}.json`;
+            
+            // Trigger the download
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            // Clean up the URL object
+            URL.revokeObjectURL(downloadLink.href);
         }
     </script>
 </body>
