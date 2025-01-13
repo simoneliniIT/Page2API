@@ -869,6 +869,11 @@
                     document.getElementById('output').dataset.apiSpec = data.feed_spec;
                     document.getElementById('resultCard').style.display = 'block';
                     document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Show product count if multiple products were found
+                    if (data.product_count > 1) {
+                        showAlert(`Found ${data.product_count} products! You can save them all at once.`, 'Success');
+                    }
                 }
             })
             .catch(error => {
@@ -884,40 +889,88 @@
 
         async function saveProduct() {
             const output = document.getElementById('output');
-            let content;
+            let products;
             try {
-                content = JSON.parse(output.value);
+                products = JSON.parse(output.value);
+                // Ensure products is an array
+                if (!Array.isArray(products)) {
+                    products = [products];
+                }
             } catch (error) {
                 showAlert('Invalid JSON format', 'Error');
                 return;
             }
             const apiSpec = output.dataset.apiSpec;
             
-            try {
-                const response = await fetch('/save-product', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+            // Show confirmation if multiple products
+            if (products.length > 1) {
+                showConfirm(
+                    `Do you want to save all ${products.length} products?`,
+                    async () => {
+                        await saveProducts(products, apiSpec);
                     },
-                    body: JSON.stringify({
-                        content: content,
-                        api_spec: apiSpec
-                    })
-                });
+                    'Save Multiple Products'
+                );
+            } else {
+                await saveProducts(products, apiSpec);
+            }
+        }
 
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to save product');
+        async function saveProducts(products, apiSpec) {
+            try {
+                const submitButton = document.querySelector('button[onclick="saveProduct()"]');
+                const originalText = submitButton.textContent;
+                submitButton.textContent = `Saving ${products.length} product(s)...`;
+                submitButton.disabled = true;
+
+                let savedCount = 0;
+                let errors = [];
+
+                for (const product of products) {
+                    try {
+                        const response = await fetch('/save-product', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                content: product,
+                                api_spec: apiSpec
+                            })
+                        });
+
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(data.error || 'Failed to save product');
+                        }
+
+                        savedCount++;
+                        showSuccessMessage(`Saved ${savedCount} of ${products.length}: ${data.name}`);
+                    } catch (error) {
+                        errors.push(error.message);
+                    }
                 }
 
-                showSuccessMessage(`Saved: ${data.name}`);
+                // Show final results
+                if (errors.length > 0) {
+                    showAlert(`Saved ${savedCount} products with ${errors.length} errors:\n${errors.join('\n')}`, 'Warning');
+                } else {
+                    showAlert(`Successfully saved all ${savedCount} products!`, 'Success');
+                }
+
+                // Reload the page after a short delay
                 setTimeout(() => {
                     location.reload();
                 }, 2000);
             } catch (error) {
                 console.error('Save error:', error);
-                showAlert('Error saving product: ' + error.message, 'Error');
+                showAlert('Error saving products: ' + error.message, 'Error');
+            } finally {
+                // Reset button state
+                const submitButton = document.querySelector('button[onclick="saveProduct()"]');
+                submitButton.textContent = 'Save Product';
+                submitButton.disabled = false;
             }
         }
 
@@ -1302,6 +1355,11 @@
                         document.getElementById('output').dataset.apiSpec = data.feed_spec;
                         document.getElementById('resultCard').style.display = 'block';
                         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+                        
+                        // Show product count if multiple products were found
+                        if (data.product_count > 1) {
+                            showAlert(`Found ${data.product_count} products! You can save them all at once.`, 'Success');
+                        }
                     }
                 })
                 .catch(error => {

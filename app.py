@@ -172,8 +172,12 @@ def convert():
 And this target API specification:
 {api_spec}
 
-Please convert the product data to match the target API specification format.
-Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
+IMPORTANT: This URL might contain multiple products. Please analyze the page and convert ALL products found.
+For each product, create a separate entry in the output array.
+
+Please convert ALL product data to match the target API specification format.
+Return ONLY an array of converted products in a clear, structured format, with no additional text or explanations.
+Each item in the array should follow the API specification format."""
 
         elif conversion_type == 'template':
             # Template-based conversion
@@ -190,8 +194,11 @@ Return ONLY the converted data in a clear, structured format, with no additional
             prompt = f"""Given this product URL:
 {product_url}
 
-Please convert the product data to match the format of this template product:
+Please convert ALL products found on this page to match the format of this template product:
 {template.url}
+
+IMPORTANT: This URL might contain multiple products. Please analyze the page and convert ALL products found.
+For each product, create a separate entry in the output array.
 
 Important guidelines:
 1. Match the exact structure and field names from the template
@@ -199,7 +206,7 @@ Important guidelines:
 3. DO NOT invent or assume any data not explicitly shown
 4. Use the same data types as the template for each field
 
-Return ONLY the converted data in the same format as the template, with no additional text or explanations."""
+Return ONLY an array of converted products in the same format as the template, with no additional text or explanations."""
 
         else:  # structured_json
             # Default structured JSON conversion
@@ -207,7 +214,10 @@ Return ONLY the converted data in the same format as the template, with no addit
             prompt = f"""Given this product URL:
 {product_url}
 
-Please create a well-structured JSON representation of the product data found on this page.
+IMPORTANT: This URL might contain multiple products. Please analyze the page and convert ALL products found.
+For each product, create a separate entry in the output array.
+
+Please create a well-structured JSON representation of ALL product data found on this page.
 Important guidelines:
 1. Include ONLY factual information found on the page
 2. DO NOT invent or assume any data not explicitly shown
@@ -217,34 +227,56 @@ Important guidelines:
 6. Format numbers and dates consistently
 7. Use proper JSON data types (strings, numbers, booleans, arrays)
 
-Return ONLY the JSON data with no additional text or explanations."""
+Return ONLY an array of JSON objects, with no additional text or explanations.
+Each object in the array should represent one product."""
 
-        print("Calling Claude API...")
-        client = Anthropic(api_key=api_key)
         message = client.messages.create(
             model="claude-3-5-sonnet-latest",
-            max_tokens=2048,
+            max_tokens=4096,
             messages=[{
                 "role": "user",
                 "content": prompt
             }]
         )
         
-        formatted_output = message.content[0].text
-        print(f"Got response from Claude ({len(formatted_output)} chars)")
+        response_content = message.content[0].text.strip()
         
-        # Return the formatted output with the appropriate spec
-        spec = data.get('api_spec') if conversion_type == 'custom_api' else (
-            f"Template: {template.name}" if conversion_type == 'template' else 'Structured JSON'
-        )
-        
-        return jsonify({
-            'content': formatted_output,
-            'feed_spec': spec
-        })
-        
+        try:
+            # Parse the response as JSON
+            products = json.loads(response_content)
+            
+            # Ensure the response is an array
+            if not isinstance(products, list):
+                products = [products]
+                
+            # Save results to a file
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'conversion_{timestamp}.json'
+            filepath = os.path.join(PRODUCTS_DIR, filename)
+            
+            os.makedirs(PRODUCTS_DIR, exist_ok=True)
+            
+            with open(filepath, 'w') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'api_spec': data.get('api_spec', ''),
+                    'products': products,
+                    'has_errors': False
+                }, f, indent=2)
+            
+            return jsonify({
+                'content': json.dumps(products),
+                'feed_spec': data.get('api_spec', ''),
+                'result_id': filename,
+                'product_count': len(products)
+            })
+            
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON response: {str(e)}")
+            return jsonify({'error': 'Invalid JSON response from conversion'}), 500
+            
     except Exception as e:
-        print(f"Conversion error: {str(e)}")
+        print(f"Error during conversion: {str(e)}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
