@@ -1500,15 +1500,12 @@ def api_get_conversion(result_id):
 @app.route('/api/docs')
 @login_required
 def api_docs():
-    if current_user.user_type not in ['distributor', 'admin']:
-        return redirect(url_for('index'))
-        
     openapi_spec = {
         "openapi": "3.0.0",
         "info": {
-            "title": "Page2API Product Conversion API",
+            "title": "Page2API",
             "version": "1.0.0",
-            "description": "API for converting travel products to your desired format"
+            "description": "Convert product data into any format using natural language queries"
         },
         "servers": [
             {
@@ -1521,7 +1518,8 @@ def api_docs():
                 "ApiKeyAuth": {
                     "type": "apiKey",
                     "in": "header",
-                    "name": "X-API-Key"
+                    "name": "X-API-Key",
+                    "description": "API key for authentication"
                 }
             }
         },
@@ -1533,8 +1531,13 @@ def api_docs():
         "paths": {
             "/api/v1/convert": {
                 "post": {
-                    "summary": "Convert products based on query",
-                    "description": "Convert travel products matching the query to the specified format",
+                    "summary": "Convert product data",
+                    "description": "Convert product data using a natural language query and format specification",
+                    "security": [
+                        {
+                            "ApiKeyAuth": []
+                        }
+                    ],
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -1546,17 +1549,17 @@ def api_docs():
                                         "query": {
                                             "type": "string",
                                             "description": "Natural language query describing the products to find",
-                                            "example": "all walking tours in Rome under $100"
+                                            "example": "all tours and activities in Paris"
                                         },
                                         "format_url": {
                                             "type": "string",
-                                            "description": "URL containing the target format specification",
-                                            "example": "https://example.com/product-format.json"
+                                            "description": "URL containing the format specification",
+                                            "example": "https://example.com/tours"
                                         },
                                         "distributor_id": {
                                             "type": "string",
-                                            "description": "Your distributor ID",
-                                            "example": "abc123-def456"
+                                            "description": "Your distributor ID for affiliate tracking",
+                                            "example": "YOUR_DISTRIBUTOR_ID"
                                         }
                                     }
                                 }
@@ -1573,14 +1576,7 @@ def api_docs():
                                         "properties": {
                                             "result_id": {
                                                 "type": "string",
-                                                "description": "ID of the conversion result"
-                                            },
-                                            "products": {
-                                                "type": "array",
-                                                "description": "Array of converted products",
-                                                "items": {
-                                                    "type": "object"
-                                                }
+                                                "description": "ID to retrieve the conversion result"
                                             }
                                         }
                                     }
@@ -1595,7 +1591,8 @@ def api_docs():
                                         "type": "object",
                                         "properties": {
                                             "error": {
-                                                "type": "string"
+                                                "type": "string",
+                                                "description": "Error message"
                                             }
                                         }
                                     }
@@ -1603,10 +1600,36 @@ def api_docs():
                             }
                         },
                         "401": {
-                            "description": "Invalid API key or distributor ID"
+                            "description": "Invalid or missing API key",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "error": {
+                                                "type": "string",
+                                                "description": "Error message"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         },
                         "429": {
-                            "description": "Rate limit exceeded"
+                            "description": "Rate limit exceeded",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "error": {
+                                                "type": "string",
+                                                "description": "Error message"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -1614,7 +1637,12 @@ def api_docs():
             "/api/v1/conversion/{result_id}": {
                 "get": {
                     "summary": "Get conversion result",
-                    "description": "Get the result of a previous conversion",
+                    "description": "Retrieve the result of a conversion by its ID",
+                    "security": [
+                        {
+                            "ApiKeyAuth": []
+                        }
+                    ],
                     "parameters": [
                         {
                             "name": "result_id",
@@ -1634,24 +1662,14 @@ def api_docs():
                                     "schema": {
                                         "type": "object",
                                         "properties": {
+                                            "content": {
+                                                "type": "object",
+                                                "description": "Converted product data"
+                                            },
                                             "timestamp": {
                                                 "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "query": {
-                                                "type": "string"
-                                            },
-                                            "format_url": {
-                                                "type": "string"
-                                            },
-                                            "distributor_id": {
-                                                "type": "string"
-                                            },
-                                            "products": {
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "object"
-                                                }
+                                                "format": "date-time",
+                                                "description": "When the conversion was completed"
                                             }
                                         }
                                     }
@@ -1659,14 +1677,26 @@ def api_docs():
                             }
                         },
                         "404": {
-                            "description": "Conversion result not found"
+                            "description": "Result not found",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "error": {
+                                                "type": "string",
+                                                "description": "Error message"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
-    
     return render_template('api_docs.html', openapi_spec=openapi_spec)
 
 # Initialize the app only if running directly

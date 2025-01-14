@@ -299,11 +299,11 @@
                     <button class="try-button" onclick="trySampleRequest()">Try it out</button>
                 </div>
                 <div class="code-block">
-                    <pre id="sampleRequest">{
+                    <textarea id="sampleRequest" spellcheck="false" style="width: 100%; height: 200px; background: transparent; color: white; border: none; font-family: inherit; font-size: inherit; resize: vertical;">{
   "query": "all tours and activities in Paris",
   "format_url": "https://example.com/tours",
   "distributor_id": "YOUR_DISTRIBUTOR_ID"
-}</pre>
+}</textarea>
                 </div>
             </div>
             <div>
@@ -338,16 +338,23 @@
     </div>
 
     <!-- OpenAPI Spec Data -->
-    <script type="text/javascript">
-        window.openApiSpec = JSON.parse({{ openapi_spec|tojson|safe }});
+    <script>
+        // Store the OpenAPI spec in a global variable
+        // Use a script tag with a custom type to store the raw JSON
+        const openApiSpec = JSON.parse(document.getElementById('openapi-spec').textContent);
+    </script>
+
+    <!-- Store the OpenAPI spec in a hidden script tag -->
+    <script type="application/json" id="openapi-spec">
+        {{ openapi_spec|tojson|safe }}
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
     <script>
-        // Initialize Swagger UI
+        // Initialize Swagger UI with the spec from Flask
         window.onload = function() {
             const ui = SwaggerUIBundle({
-                spec: window.openApiSpec,
+                spec: openApiSpec,
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
@@ -362,7 +369,7 @@
             
             // Load API keys
             loadApiKeys();
-        }
+        };
         
         // Load API keys
         async function loadApiKeys() {
@@ -500,11 +507,13 @@
             responseEl.textContent = 'Loading...';
             
             try {
-                const sampleRequest = {
-                    query: "all tours and activities in Paris",
-                    format_url: "https://example.com/tours",
-                    distributor_id: "DEMO_ID"
-                };
+                // Parse the request from the textarea
+                let sampleRequest;
+                try {
+                    sampleRequest = JSON.parse(document.getElementById('sampleRequest').value);
+                } catch (e) {
+                    throw new Error('Invalid JSON in request body');
+                }
                 
                 const convertResponse = await fetch('/api/v1/convert', {
                     method: 'POST',
