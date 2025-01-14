@@ -664,7 +664,7 @@
                             <th>Category</th>
                             <th>Original Feed Format</th>
                             <th>Supplier</th>
-                            <th>Saved</th>
+                            <th>Commission</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -693,7 +693,7 @@
                                 <div class="feed-content">{{ product.api_spec }}</div>
                             </td>
                             <td>{{ product.owner.company_name }}</td>
-                            <td class="date-cell">{{ product.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td class="date-cell">{{ "%.1f"|format(product.reward_percentage) }}%</td>
                         </tr>
                         {% endfor %}
                     </tbody>

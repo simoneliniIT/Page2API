@@ -13,6 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate, upgrade
 from functools import wraps
 from sqlalchemy import text
+import uuid
 
 app = Flask(__name__)
 
@@ -64,7 +65,7 @@ class User(UserMixin, db.Model):
     company_name = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(512), nullable=True)
     user_type = db.Column(db.String(20), nullable=False)  # 'supplier' or 'distributor'
-    # Define the relationship with lazy='joined' to avoid N+1 queries
+    distributor_id = db.Column(db.String(36), unique=True)  # UUID for distributors
     products = db.relationship('Product', backref=db.backref('owner', lazy='joined'), lazy='dynamic')
 
     def set_password(self, password):
@@ -72,6 +73,10 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def generate_distributor_id(self):
+        if self.user_type == 'distributor' and not self.distributor_id:
+            self.distributor_id = str(uuid.uuid4())
 
 @login_manager.user_loader
 def load_user(id):
@@ -86,6 +91,7 @@ class Product(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     api_spec = db.Column(db.Text)
+    reward_percentage = db.Column(db.Float, default=0.0)  # Affiliate reward percentage
 
 # Add Template model after the Product model
 class Template(db.Model):
@@ -292,6 +298,11 @@ def save_product():
             
         content = request.json.get('content')
         api_spec = request.json.get('api_spec', '')
+        reward_percentage = float(request.json.get('reward_percentage', 0))
+        
+        # Validate reward percentage
+        if not 0 <= reward_percentage <= 100:
+            return jsonify({'error': 'Reward percentage must be between 0 and 100'}), 400
         
         if not content:
             return jsonify({'error': 'No content provided'}), 400
@@ -343,7 +354,8 @@ Category: [category]"""
             name=product_name,
             category=product_category,
             user_id=current_user.id,
-            api_spec=api_spec
+            api_spec=api_spec,
+            reward_percentage=reward_percentage
         )
         
         print("Adding product to database session...")
@@ -543,11 +555,15 @@ def signup():
             user_type=user_type
         )
         user.set_password(password)
+        
+        # Generate distributor ID for distributors
+        if user_type == 'distributor':
+            user.generate_distributor_id()
+            
         db.session.add(user)
         db.session.commit()
 
         login_user(user)
-        # Redirect based on user type after signup
         if user.user_type == 'supplier':
             return redirect(url_for('share'))
         else:
@@ -903,14 +919,18 @@ def convert_selected():
         if not product_ids:
             return jsonify({'error': 'No products selected'}), 400
 
-        # Get selected products for the current user
+        # Get selected products
         products = Product.query.filter(
-            Product.id.in_(product_ids),
-            Product.user_id == current_user.id
+            Product.id.in_(product_ids)
         ).all()
         
         if not products:
             return jsonify({'error': 'No products found'}), 404
+
+        # Add distributor ID to the results if user is a distributor
+        distributor_id = None
+        if current_user.user_type == 'distributor':
+            distributor_id = current_user.distributor_id
 
         # Check if ANTHROPIC_API_KEY is set
         api_key = os.environ.get('ANTHROPIC_API_KEY')
@@ -975,14 +995,16 @@ Return ONLY the converted data in a clear, structured format, with no additional
                 'timestamp': datetime.now().isoformat(),
                 'api_spec': api_spec,
                 'products': converted_products,
-                'has_errors': has_errors
+                'has_errors': has_errors,
+                'distributor_id': distributor_id
             }, f, indent=2)
 
         return jsonify({
             'message': 'Conversion completed',
             'result_id': filename,
             'products': converted_products,
-            'has_errors': has_errors
+            'has_errors': has_errors,
+            'distributor_id': distributor_id
         })
 
     except Exception as e:

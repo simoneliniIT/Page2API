@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-01-14T14:58:55.279514",
+  "api_spec": "",
+  "products": [
+    {
+      "name": "Ticket to 2nd floor by stairs",
+      "type": "Admission ticket",
+      "accessType": "Via stairs only",
+      "maxLevel": "2nd floor",
+      "pricing": {
+        "adult": {
+          "amount": 11.3,
+          "currency": "EUR"
+        },
+        "youth": {
+          "amount": 5.6,
+          "currency": "EUR",
+          "ageRange": "12-24 years"
+        },
+        "child": {
+          "amount": 2.8,
+          "currency": "EUR",
+          "ageRange": "4-11 years"
+        },
+        "disabled": {
+          "amount": 5.6,
+          "currency": "EUR"
+        }
+      },
+      "freeAdmission": [
+        "Children under 4 years",
+        "Disabled person's companion"
+      ],
+      "details": {
+        "stairsToClimb": 674,
+        "heightToSecondFloor": "115 meters"
+      }
+    }
+  ],
+  "has_errors": false
+}

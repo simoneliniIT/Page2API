@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-01-13T23:25:16.387213",
+  "api_spec": "",
+  "products": [
+    {
+      "name": "Eiffel Tower Admission - Stairs + Lift",
+      "variants": [
+        {
+          "type": "Adult",
+          "age_range": "25 years and over",
+          "price": 27.3
+        },
+        {
+          "type": "Youth",
+          "age_range": "12-24 years",
+          "price": 13.7
+        },
+        {
+          "type": "Child",
+          "age_range": "4-11 years",
+          "price": 6.9
+        },
+        {
+          "type": "Young Child",
+          "age_range": "0-3 years",
+          "price": 0.0
+        }
+      ],
+      "access_type": "Access by stairs to 2nd floor + lift to the top",
+      "booking_type": "Online advance booking recommended"
+    },
+    {
+      "name": "Eiffel Tower Admission - Lift",
+      "variants": [
+        {
+          "type": "Adult",
+          "age_range": "25 years and over",
+          "price": 28.3
+        },
+        {
+          "type": "Youth",
+          "age_range": "12-24 years",
+          "price": 14.2
+        },
+        {
+          "type": "Child",
+          "age_range": "4-11 years",
+          "price": 7.1
+        },
+        {
+          "type": "Young Child",
+          "age_range": "0-3 years",
+          "price": 0.0
+        }
+      ],
+      "access_type": "Access by lift to 2nd floor + lift to the top",
+      "booking_type": "Online advance booking recommended"
+    },
+    {
+      "name": "Eiffel Tower Admission - Stairs Only",
+      "variants": [
+        {
+          "type": "Adult",
+          "age_range": "25 years and over",
+          "price": 11.3
+        },
+        {
+          "type": "Youth",
+          "age_range": "12-24 years",
+          "price": 5.7
+        },
+        {
+          "type": "Child",
+          "age_range": "4-11 years",
+          "price": 2.8
+        },
+        {
+          "type": "Young Child",
+          "age_range": "0-3 years",
+          "price": 0.0
+        }
+      ],
+      "access_type": "Access by stairs to 2nd floor only",
+      "booking_type": "Online advance booking recommended"
+    }
+  ],
+  "has_errors": false
+}
