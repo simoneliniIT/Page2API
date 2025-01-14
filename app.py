@@ -874,28 +874,25 @@ def init_db():
             db.session.commit()
             print("Tables dropped successfully")
             
-            # Explicitly alter the column if it exists
-            try:
-                db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE varchar(512)'))
-                db.session.commit()
-                print("Altered password_hash column length")
-            except Exception as e:
-                print(f"Note: Could not alter column (this is expected if table doesn't exist): {str(e)}")
-        
-        print("Creating all tables...")
-        db.create_all()
-        print("Tables created successfully")
-        
-        # Create admin and test users
-        print("\nCreating/updating users...")
-        create_admin_user()
-        print("Users created/updated successfully")
-        
-        return jsonify({
-            'database_url_set': bool(database_url),
-            'message': 'Database initialized successfully'
-        })
-        
+            # Create all tables
+            print("Creating all tables...")
+            db.create_all()
+            print("Tables created successfully")
+            
+            # Run migrations
+            print("Running database migrations...")
+            upgrade()
+            print("Migrations completed successfully")
+            
+            # Create admin and test users
+            print("\nCreating/updating users...")
+            create_admin_user()
+            print("Users created/updated successfully")
+            
+            return jsonify({
+                'database_url_set': bool(database_url),
+                'message': 'Database initialized successfully'
+            })
     except Exception as e:
         print(f"Error initializing database: {str(e)}")
         return jsonify({
