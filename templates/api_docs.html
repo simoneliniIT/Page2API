@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Documentation - Page2API</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css">
+    <style>
+        .swagger-ui .topbar {
+            display: none;
+        }
+        
+        .swagger-ui {
+            margin-top: 40px;
+        }
+        
+        .api-key-section {
+            max-width: 1460px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .api-key-section h2 {
+            margin-top: 0;
+        }
+        
+        .api-keys-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .api-keys-table th,
+        .api-keys-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .api-keys-table th {
+            background: #f5f5f5;
+        }
+        
+        .create-key-form {
+            margin-top: 20px;
+        }
+        
+        .create-key-form input[type="text"] {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #0071e3;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .button:hover {
+            background: #0077ED;
+        }
+        
+        .button.delete {
+            background: #dc3545;
+        }
+        
+        .button.delete:hover {
+            background: #c82333;
+        }
+        
+        /* New API Key Modal styles */
+        .api-key-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            z-index: 1001;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .api-key-modal h3 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: #1d1d1f;
+        }
+
+        .api-key-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f5f5f7;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .copy-button {
+            padding: 8px 16px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .copy-button:hover {
+            background: #0077ED;
+        }
+
+        .copy-button.copied {
+            background: #34c759;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .modal-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-button.primary {
+            background: #0071e3;
+            color: white;
+        }
+
+        .modal-button.secondary {
+            background: #e8e8ed;
+            color: #1d1d1f;
+        }
+
+        /* Sandbox styles */
+        .sandbox-section {
+            max-width: 1460px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sandbox-section h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .sandbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 16px;
+            color: #fff;
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .code-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .try-button {
+            padding: 8px 16px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .try-button:hover {
+            background: #0077ED;
+            transform: translateY(-1px);
+        }
+
+        .try-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-section {
+            margin-top: 16px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .status-badge.success {
+            background: #34c759;
+            color: white;
+        }
+
+        .status-badge.error {
+            background: #ff3b30;
+            color: white;
+        }
+
+        .status-badge.pending {
+            background: #ff9500;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="api-key-section">
+        <h2>API Keys</h2>
+        <div class="create-key-form">
+            <input type="text" id="keyName" placeholder="Key name (e.g., Production, Testing)">
+            <button class="button" onclick="createApiKey()">Create New API Key</button>
+        </div>
+        <table class="api-keys-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Created</th>
+                    <th>Last Used</th>
+                    <th>Status</th>
+                    <th>Requests (1h)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="apiKeysTableBody">
+                <!-- API keys will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="sandbox-section">
+        <h2>API Sandbox</h2>
+        <div class="sandbox-grid">
+            <div>
+                <div class="code-header">
+                    <span class="code-label">Sample Request</span>
+                    <button class="try-button" onclick="trySampleRequest()">Try it out</button>
+                </div>
+                <div class="code-block">
+                    <pre id="sampleRequest">{
+  "query": "all tours and activities in Paris",
+  "format_url": "https://example.com/tours",
+  "distributor_id": "YOUR_DISTRIBUTOR_ID"
+}</pre>
+                </div>
+            </div>
+            <div>
+                <div class="code-header">
+                    <span class="code-label">Response</span>
+                    <span id="responseStatus"></span>
+                </div>
+                <div class="code-block">
+                    <pre id="responseContent">// Response will appear here after you click "Try it out"</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <!-- New API Key Modal -->
+    <div class="modal-overlay" id="apiKeyModal">
+        <div class="api-key-modal">
+            <h3>Your New API Key</h3>
+            <p>Please save this key as it won't be shown again.</p>
+            <div class="api-key-display">
+                <span id="newApiKey"></span>
+                <button class="copy-button" onclick="copyApiKey()">
+                    Copy
+                </button>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button primary" onclick="closeApiKeyModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OpenAPI Spec Data -->
+    <script type="text/javascript">
+        window.openApiSpec = JSON.parse({{ openapi_spec|tojson|safe }});
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+    <script>
+        // Initialize Swagger UI
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                spec: window.openApiSpec,
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "BaseLayout"
+            });
+            
+            // Load API keys
+            loadApiKeys();
+        }
+        
+        // Load API keys
+        async function loadApiKeys() {
+            try {
+                const response = await fetch('/api/keys');
+                const keys = await response.json();
+                
+                const tbody = document.getElementById('apiKeysTableBody');
+                tbody.innerHTML = '';
+                
+                keys.forEach(key => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${key.name}</td>
+                        <td>${new Date(key.created_at).toLocaleString()}</td>
+                        <td>${key.last_used_at ? new Date(key.last_used_at).toLocaleString() : 'Never'}</td>
+                        <td>${key.is_active ? 'Active' : 'Inactive'}</td>
+                        <td>${key.requests_count}</td>
+                        <td>
+                            <button class="button delete" onclick="deleteApiKey(${key.id})">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading API keys:', error);
+            }
+        }
+        
+        // Show API key modal
+        function showApiKeyModal(apiKey) {
+            document.getElementById('apiKeyModal').style.display = 'block';
+            document.getElementById('newApiKey').textContent = apiKey;
+        }
+
+        // Close API key modal
+        function closeApiKeyModal() {
+            document.getElementById('apiKeyModal').style.display = 'none';
+            document.querySelector('.copy-button').textContent = 'Copy';
+            document.querySelector('.copy-button').classList.remove('copied');
+        }
+
+        // Copy API key to clipboard
+        async function copyApiKey() {
+            const apiKey = document.getElementById('newApiKey').textContent;
+            try {
+                await navigator.clipboard.writeText(apiKey);
+                const copyButton = document.querySelector('.copy-button');
+                copyButton.textContent = 'Copied!';
+                copyButton.classList.add('copied');
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                    copyButton.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            }
+        }
+
+        // Update createApiKey function
+        async function createApiKey() {
+            const name = document.getElementById('keyName').value.trim();
+            if (!name) {
+                alert('Please enter a name for the API key');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name })
+                });
+                
+                const result = await response.json();
+                if (result.key) {
+                    showApiKeyModal(result.key);
+                    loadApiKeys();
+                    document.getElementById('keyName').value = '';
+                } else {
+                    alert('Error creating API key');
+                }
+            } catch (error) {
+                console.error('Error creating API key:', error);
+                alert('Error creating API key');
+            }
+        }
+        
+        // Delete API key
+        async function deleteApiKey(keyId) {
+            if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/keys/${keyId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Reload the API keys table
+                    loadApiKeys();
+                } else {
+                    alert('Error deleting API key');
+                }
+            } catch (error) {
+                console.error('Error deleting API key:', error);
+                alert('Error deleting API key');
+            }
+        }
+
+        // Sample request functionality
+        async function trySampleRequest() {
+            const button = document.querySelector('.try-button');
+            const statusEl = document.getElementById('responseStatus');
+            const responseEl = document.getElementById('responseContent');
+            
+            // Get the first active API key
+            const response = await fetch('/api/keys');
+            const keys = await response.json();
+            const activeKey = keys.find(k => k.is_active);
+            
+            if (!activeKey) {
+                alert('Please create an API key first');
+                return;
+            }
+            
+            // Disable button and show loading state
+            button.disabled = true;
+            button.textContent = 'Sending request...';
+            statusEl.innerHTML = '<span class="status-badge pending">Pending</span>';
+            responseEl.textContent = 'Loading...';
+            
+            try {
+                const sampleRequest = {
+                    query: "all tours and activities in Paris",
+                    format_url: "https://example.com/tours",
+                    distributor_id: "DEMO_ID"
+                };
+                
+                const convertResponse = await fetch('/api/v1/convert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': activeKey.key
+                    },
+                    body: JSON.stringify(sampleRequest)
+                });
+                
+                const result = await convertResponse.json();
+                
+                if (convertResponse.ok) {
+                    statusEl.innerHTML = '<span class="status-badge success">Success</span>';
+                    responseEl.textContent = JSON.stringify(result, null, 2);
+                } else {
+                    statusEl.innerHTML = '<span class="status-badge error">Error</span>';
+                    responseEl.textContent = JSON.stringify(result, null, 2);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusEl.innerHTML = '<span class="status-badge error">Error</span>';
+                responseEl.textContent = JSON.stringify({
+                    error: 'Failed to send request',
+                    message: error.message
+                }, null, 2);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Try it out';
+            }
+        }
+    </script>
+</body>
+</html> 

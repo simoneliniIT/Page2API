@@ -4,7 +4,7 @@ import requests
 from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import traceback
 from flask_sqlalchemy import SQLAlchemy
@@ -14,6 +14,7 @@ from flask_migrate import Migrate, upgrade
 from functools import wraps
 from sqlalchemy import text
 import uuid
+import secrets
 
 app = Flask(__name__)
 
@@ -67,6 +68,8 @@ class User(UserMixin, db.Model):
     user_type = db.Column(db.String(20), nullable=False)  # 'supplier' or 'distributor'
     distributor_id = db.Column(db.String(36), unique=True)  # UUID for distributors
     products = db.relationship('Product', backref=db.backref('owner', lazy='joined'), lazy='dynamic')
+    api_rate_limit = db.Column(db.Integer, default=100)  # Requests per hour
+    api_keys = db.relationship('APIKey', backref='user', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -77,6 +80,44 @@ class User(UserMixin, db.Model):
     def generate_distributor_id(self):
         if self.user_type == 'distributor' and not self.distributor_id:
             self.distributor_id = str(uuid.uuid4())
+
+class APIKey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(64), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used_at = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+    requests_count = db.Column(db.Integer, default=0)
+
+    def __init__(self, user_id, name):
+        self.user_id = user_id
+        self.name = name
+        self.key = secrets.token_urlsafe(32)  # Generate a secure random API key
+
+    def increment_requests(self):
+        self.requests_count += 1
+        self.last_used_at = datetime.utcnow()
+        db.session.commit()
+
+    def check_rate_limit(self):
+        """Check if the user has exceeded their rate limit in the past hour"""
+        if not self.last_used_at:
+            return True
+            
+        user = User.query.get(self.user_id)
+        if not user:
+            return False
+            
+        # Get requests in the last hour
+        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        if self.last_used_at < one_hour_ago:
+            self.requests_count = 0
+            db.session.commit()
+            return True
+            
+        return self.requests_count < user.api_rate_limit
 
 @login_manager.user_loader
 def load_user(id):
@@ -116,6 +157,24 @@ def admin_required(f):
             print(f"Access denied - Not admin (type: {current_user.user_type})")  # Debug log
             return 'Access denied', 403
         print("Admin access granted")  # Debug log
+        return f(*args, **kwargs)
+    return decorated_function
+
+def require_api_key(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key')
+        if not api_key:
+            return jsonify({'error': 'API key is required'}), 401
+            
+        api_key_obj = APIKey.query.filter_by(key=api_key, is_active=True).first()
+        if not api_key_obj:
+            return jsonify({'error': 'Invalid API key'}), 401
+            
+        if not api_key_obj.check_rate_limit():
+            return jsonify({'error': 'Rate limit exceeded'}), 429
+            
+        api_key_obj.increment_requests()
         return f(*args, **kwargs)
     return decorated_function
 
@@ -1219,6 +1278,396 @@ Return the array in valid JSON format, with no additional text or explanations."
         print(f"\nError during conversion: {str(e)}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys', methods=['GET'])
+@login_required
+def list_api_keys():
+    if current_user.user_type not in ['distributor', 'admin']:
+        return jsonify({'error': 'Access denied'}), 403
+        
+    keys = APIKey.query.filter_by(user_id=current_user.id).all()
+    return jsonify([{
+        'id': k.id,
+        'name': k.name,
+        'created_at': k.created_at.isoformat(),
+        'last_used_at': k.last_used_at.isoformat() if k.last_used_at else None,
+        'is_active': k.is_active,
+        'requests_count': k.requests_count
+    } for k in keys])
+
+@app.route('/api/keys', methods=['POST'])
+@login_required
+def create_api_key():
+    if current_user.user_type not in ['distributor', 'admin']:
+        return jsonify({'error': 'Access denied'}), 403
+        
+    name = request.json.get('name')
+    if not name:
+        return jsonify({'error': 'Name is required'}), 400
+        
+    api_key = APIKey(user_id=current_user.id, name=name)
+    db.session.add(api_key)
+    db.session.commit()
+    
+    return jsonify({
+        'id': api_key.id,
+        'key': api_key.key,  # Only shown once upon creation
+        'name': api_key.name,
+        'created_at': api_key.created_at.isoformat()
+    })
+
+@app.route('/api/keys/<int:key_id>', methods=['DELETE'])
+@login_required
+def delete_api_key(key_id):
+    if current_user.user_type not in ['distributor', 'admin']:
+        return jsonify({'error': 'Access denied'}), 403
+        
+    api_key = APIKey.query.filter_by(id=key_id, user_id=current_user.id).first()
+    if not api_key:
+        return jsonify({'error': 'API key not found'}), 404
+        
+    db.session.delete(api_key)
+    db.session.commit()
+    
+    return jsonify({'message': 'API key deleted successfully'})
+
+@app.route('/api/keys/<int:key_id>/deactivate', methods=['POST'])
+@login_required
+def deactivate_api_key(key_id):
+    if current_user.user_type not in ['distributor', 'admin']:
+        return jsonify({'error': 'Access denied'}), 403
+        
+    api_key = APIKey.query.filter_by(id=key_id, user_id=current_user.id).first()
+    if not api_key:
+        return jsonify({'error': 'API key not found'}), 404
+        
+    api_key.is_active = False
+    db.session.commit()
+    
+    return jsonify({'message': 'API key deactivated successfully'})
+
+@app.route('/api/v1/convert', methods=['POST'])
+@require_api_key
+def api_convert():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        query = data.get('query')
+        format_url = data.get('format_url')
+        distributor_id = data.get('distributor_id')
+        
+        if not all([query, format_url, distributor_id]):
+            return jsonify({'error': 'Missing required fields: query, format_url, distributor_id'}), 400
+            
+        # Verify distributor ID
+        user = User.query.filter_by(distributor_id=distributor_id, user_type='distributor').first()
+        if not user:
+            return jsonify({'error': 'Invalid distributor ID'}), 401
+            
+        # Get format specification from URL
+        try:
+            response = requests.get(format_url)
+            if not response.ok:
+                return jsonify({'error': 'Failed to fetch format specification'}), 400
+            format_spec = response.text
+        except Exception as e:
+            return jsonify({'error': f'Error fetching format specification: {str(e)}'}), 400
+            
+        # Convert natural language query to database query
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
+            
+        client = Anthropic(api_key=api_key)
+        
+        # Convert query to database filter
+        query_prompt = f"""Given this natural language query for travel products:
+{query}
+
+Convert it into a set of database filters. Consider these product categories:
+- Tours & Activities
+- Accommodation
+- Transportation
+- Events & Shows
+- Car Rental
+- Vacations
+- Airport Transfers
+
+Return ONLY a JSON object with these fields:
+1. categories: array of relevant categories
+2. keywords: array of important keywords to match
+3. min_price: minimum price (if specified)
+4. max_price: maximum price (if specified)
+5. location: location info (if specified)
+
+Example:
+{{"categories": ["Tours & Activities"], "keywords": ["walking", "food"], "min_price": null, "max_price": 100, "location": "Rome"}}"""
+
+        message = client.messages.create(
+            model="claude-3-5-haiku-latest",
+            max_tokens=100,
+            messages=[{
+                "role": "user",
+                "content": query_prompt
+            }]
+        )
+        
+        try:
+            query_params = json.loads(message.content[0].text.strip())
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Failed to parse query parameters'}), 500
+            
+        # Build database query
+        products_query = Product.query
+        
+        if query_params.get('categories'):
+            products_query = products_query.filter(Product.category.in_(query_params['categories']))
+            
+        # Get matching products
+        products = products_query.all()
+        if not products:
+            return jsonify({'error': 'No matching products found'}), 404
+            
+        # Convert products to target format
+        conversion_prompt = f"""Given these products:
+{json.dumps([p.content for p in products], indent=2)}
+
+And this target format specification:
+{format_spec}
+
+Please convert each product to match the target format specification.
+IMPORTANT: For any URLs in the converted content, append "?ref={distributor_id}"
+
+Return ONLY an array of converted products in the target format, with no additional text or explanations."""
+
+        message = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=4096,
+            messages=[{
+                "role": "user",
+                "content": conversion_prompt
+            }]
+        )
+        
+        try:
+            converted_products = json.loads(message.content[0].text.strip())
+            
+            # Save conversion result
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'conversion_{timestamp}.json'
+            filepath = os.path.join(PRODUCTS_DIR, filename)
+            
+            with open(filepath, 'w') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'query': query,
+                    'format_url': format_url,
+                    'distributor_id': distributor_id,
+                    'products': converted_products
+                }, f, indent=2)
+            
+            return jsonify({
+                'result_id': filename,
+                'products': converted_products
+            })
+            
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Failed to parse converted products'}), 500
+            
+    except Exception as e:
+        print(f"Error in API conversion: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/conversion/<result_id>', methods=['GET'])
+@require_api_key
+def api_get_conversion(result_id):
+    try:
+        filepath = os.path.join(PRODUCTS_DIR, secure_filename(result_id))
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Conversion result not found'}), 404
+            
+        with open(filepath, 'r') as f:
+            result = json.load(f)
+            
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/docs')
+@login_required
+def api_docs():
+    if current_user.user_type not in ['distributor', 'admin']:
+        return redirect(url_for('index'))
+        
+    openapi_spec = {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "Page2API Product Conversion API",
+            "version": "1.0.0",
+            "description": "API for converting travel products to your desired format"
+        },
+        "servers": [
+            {
+                "url": request.host_url.rstrip('/'),
+                "description": "Current server"
+            }
+        ],
+        "components": {
+            "securitySchemes": {
+                "ApiKeyAuth": {
+                    "type": "apiKey",
+                    "in": "header",
+                    "name": "X-API-Key"
+                }
+            }
+        },
+        "security": [
+            {
+                "ApiKeyAuth": []
+            }
+        ],
+        "paths": {
+            "/api/v1/convert": {
+                "post": {
+                    "summary": "Convert products based on query",
+                    "description": "Convert travel products matching the query to the specified format",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": ["query", "format_url", "distributor_id"],
+                                    "properties": {
+                                        "query": {
+                                            "type": "string",
+                                            "description": "Natural language query describing the products to find",
+                                            "example": "all walking tours in Rome under $100"
+                                        },
+                                        "format_url": {
+                                            "type": "string",
+                                            "description": "URL containing the target format specification",
+                                            "example": "https://example.com/product-format.json"
+                                        },
+                                        "distributor_id": {
+                                            "type": "string",
+                                            "description": "Your distributor ID",
+                                            "example": "abc123-def456"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Successful conversion",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "result_id": {
+                                                "type": "string",
+                                                "description": "ID of the conversion result"
+                                            },
+                                            "products": {
+                                                "type": "array",
+                                                "description": "Array of converted products",
+                                                "items": {
+                                                    "type": "object"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "400": {
+                            "description": "Invalid request",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "error": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "401": {
+                            "description": "Invalid API key or distributor ID"
+                        },
+                        "429": {
+                            "description": "Rate limit exceeded"
+                        }
+                    }
+                }
+            },
+            "/api/v1/conversion/{result_id}": {
+                "get": {
+                    "summary": "Get conversion result",
+                    "description": "Get the result of a previous conversion",
+                    "parameters": [
+                        {
+                            "name": "result_id",
+                            "in": "path",
+                            "required": True,
+                            "schema": {
+                                "type": "string"
+                            },
+                            "description": "ID of the conversion result"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Conversion result",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "timestamp": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "query": {
+                                                "type": "string"
+                                            },
+                                            "format_url": {
+                                                "type": "string"
+                                            },
+                                            "distributor_id": {
+                                                "type": "string"
+                                            },
+                                            "products": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "404": {
+                            "description": "Conversion result not found"
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return render_template('api_docs.html', openapi_spec=openapi_spec)
 
 # Initialize the app only if running directly
 if __name__ == '__main__':
