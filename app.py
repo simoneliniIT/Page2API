@@ -865,10 +865,23 @@ def init_db():
         print(f"Database URL: {'[SET]' if database_url else '[NOT SET]'}")
         
         with app.app_context():
-            # Run migrations first
-            print("Running database migrations...")
-            upgrade()
-            print("Migrations completed successfully")
+            # Check if tables exist first
+            print("Checking database tables...")
+            inspector = db.inspect(db.engine)
+            existing_tables = inspector.get_table_names()
+            print(f"Existing tables: {existing_tables}")
+            
+            if 'user' not in existing_tables:
+                print("Creating user table...")
+                User.__table__.create(db.engine)
+            
+            if 'product' not in existing_tables:
+                print("Creating product table...")
+                Product.__table__.create(db.engine)
+            
+            if 'template' not in existing_tables:
+                print("Creating template table...")
+                Template.__table__.create(db.engine)
             
             # Add new columns if they don't exist
             try:
