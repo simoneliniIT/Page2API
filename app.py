@@ -864,20 +864,18 @@ def init_db():
         database_url = os.environ.get('DATABASE_URL')
         print(f"Database URL: {'[SET]' if database_url else '[NOT SET]'}")
         
-        # Drop all tables
-        print("Dropping all tables...")
         with app.app_context():
-            db.session.execute(text('DROP TABLE IF EXISTS alembic_version'))
-            db.session.execute(text('DROP TABLE IF EXISTS product'))
-            db.session.execute(text('DROP TABLE IF EXISTS template'))
-            db.session.execute(text('DROP TABLE IF EXISTS "user"'))
-            db.session.commit()
-            print("Tables dropped successfully")
-            
-            # Create all tables
-            print("Creating all tables...")
-            db.create_all()
-            print("Tables created successfully")
+            # Instead of dropping tables, alter them
+            try:
+                print("Adding distributor_id column to user table...")
+                db.session.execute(text('ALTER TABLE "user" ADD COLUMN IF NOT EXISTS distributor_id VARCHAR(36) UNIQUE'))
+                print("Adding reward_percentage column to product table...")
+                db.session.execute(text('ALTER TABLE product ADD COLUMN IF NOT EXISTS reward_percentage FLOAT DEFAULT 0.0'))
+                db.session.commit()
+                print("Added new columns successfully")
+            except Exception as e:
+                print(f"Error adding columns: {str(e)}")
+                db.session.rollback()
             
             # Run migrations
             print("Running database migrations...")
