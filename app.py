@@ -904,116 +904,7 @@ def init_db():
 @login_required
 def convert_selected():
     try:
-        data = request.json
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-            
-        api_spec = data.get('api_spec')
-        product_ids = data.get('product_ids', [])
-        
-        if not api_spec:
-            return jsonify({'error': 'API specification is required'}), 400
-        if not product_ids:
-            return jsonify({'error': 'No products selected'}), 400
-
-        # Get selected products
-        products = Product.query.filter(
-            Product.id.in_(product_ids)
-        ).all()
-        
-        if not products:
-            return jsonify({'error': 'No products found'}), 404
-
-        # Add distributor ID to the results if user is a distributor
-        distributor_id = None
-        if current_user.user_type == 'distributor':
-            distributor_id = current_user.distributor_id
-
-        # Check if ANTHROPIC_API_KEY is set
-        api_key = os.environ.get('ANTHROPIC_API_KEY')
-        if not api_key:
-            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
-
-        client = Anthropic(api_key=api_key)
-        converted_products = []
-        has_errors = False
-
-        for product in products:
-            try:
-                prompt = f"""Given this product data:
-{json.dumps(product.content, indent=2)}
-
-And this target API specification:
-{api_spec}
-
-Please convert the product data to match the target API specification format.
-Return ONLY the converted data in a clear, structured format, with no additional text or explanations."""
-
-                message = client.messages.create(
-                    model="claude-3-5-sonnet-latest",
-                    max_tokens=2048,
-                    messages=[{
-                        "role": "user",
-                        "content": prompt
-                    }]
-                )
-                
-                converted_content = message.content[0].text
-                try:
-                    # Verify the converted content is valid JSON
-                    json.loads(converted_content)
-                except:
-                    # If not valid JSON, assume it's a string that needs to be parsed
-                    converted_content = json.dumps(converted_content)
-                
-                converted_products.append({
-                    'id': product.id,
-                    'original_content': product.content,
-                    'converted_content': converted_content,
-                    'name': product.name,
-                    'timestamp': product.timestamp.isoformat()
-                })
-            except Exception as e:
-                has_errors = True
-                print(f"Error converting product {product.id}: {str(e)}")
-                converted_products.append({
-                    'id': product.id,
-                    'error': str(e),
-                    'name': product.name
-                })
-
-        # Save results to a file
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'conversion_{timestamp}.json'
-        filepath = os.path.join(PRODUCTS_DIR, filename)
-        
-        with open(filepath, 'w') as f:
-            json.dump({
-                'timestamp': datetime.now().isoformat(),
-                'api_spec': api_spec,
-                'products': converted_products,
-                'has_errors': has_errors,
-                'distributor_id': distributor_id
-            }, f, indent=2)
-
-        return jsonify({
-            'message': 'Conversion completed',
-            'result_id': filename,
-            'products': converted_products,
-            'has_errors': has_errors,
-            'distributor_id': distributor_id
-        })
-
-    except Exception as e:
-        print(f"Error during conversion: {str(e)}")
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/convert-all', methods=['POST'])
-@login_required
-def convert_all():
-    try:
-        print("\n=== Starting convert_all ===")
+        print("\n=== Starting convert_selected ===")
         # Check if user is a distributor or admin
         if current_user.user_type not in ['distributor', 'admin']:
             print("Access denied: User type not distributor/admin")
@@ -1025,18 +916,24 @@ def convert_all():
             return jsonify({'error': 'No data provided'}), 400
             
         api_spec = data.get('api_spec')
+        product_ids = data.get('product_ids', [])
+        
         if not api_spec:
             print("No API specification provided")
             return jsonify({'error': 'API specification is required'}), 400
+            
+        if not product_ids:
+            print("No product IDs provided")
+            return jsonify({'error': 'No products selected'}), 400
 
-        # Get selected products or all products
-        if 'product_ids' in data:
-            print(f"Converting selected products: {data['product_ids']}")
-            products = Product.query.filter(Product.id.in_(data['product_ids'])).all()
-        else:
-            print("Converting all products")
-            products = Product.query.all()
+        # Get distributor ID
+        distributor_id = None
+        if current_user.user_type == 'distributor':
+            distributor_id = current_user.distributor_id
+            print(f"Using distributor ID: {distributor_id}")
 
+        # Get selected products
+        products = Product.query.filter(Product.id.in_(product_ids)).all()
         if not products:
             print("No products found")
             return jsonify({'error': 'No products found'}), 404
@@ -1053,17 +950,17 @@ def convert_all():
         converted_products = []
         has_errors = False
 
-        # Prepare all products for a single conversion
-        all_products_data = []
+        # Prepare selected products for conversion
+        selected_products_data = []
         for product in products:
-            all_products_data.append({
+            selected_products_data.append({
                 'id': product.id,
                 'content': product.content
             })
 
-        # Convert all products in a single request
+        # Convert selected products in a single request
         prompt = f"""Given these products:
-{json.dumps(all_products_data, indent=2)}
+{json.dumps(selected_products_data, indent=2)}
 
 And this target API specification:
 {api_spec}
@@ -1071,9 +968,12 @@ And this target API specification:
 Please convert each product to match the target API specification format.
 For each product, preserve its ID and convert its content.
 
+IMPORTANT: For any URLs in the converted content, append "?ref={distributor_id}" if a distributor ID is provided.
+Current distributor ID: {distributor_id if distributor_id else 'None'}
+
 Return ONLY an array of objects, where each object has:
 1. id: The original product ID
-2. content: The converted content matching the API specification
+2. content: The converted content matching the API specification, with distributor ID appended to URLs if provided
 
 Return the array in valid JSON format, with no additional text or explanations."""
 
@@ -1129,14 +1029,166 @@ Return the array in valid JSON format, with no additional text or explanations."
                     'timestamp': datetime.now().isoformat(),
                     'api_spec': api_spec,
                     'products': converted_products,
-                    'has_errors': has_errors
+                    'has_errors': has_errors,
+                    'distributor_id': distributor_id
                 }, f, indent=2)
             
             return jsonify({
                 'message': 'Conversion completed',
                 'result_id': filename,
                 'products': converted_products,
-                'has_errors': has_errors
+                'has_errors': has_errors,
+                'distributor_id': distributor_id
+            })
+            
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON response: {str(e)}")
+            return jsonify({'error': 'Invalid JSON response from conversion'}), 500
+            
+    except Exception as e:
+        print(f"\nError during conversion: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/convert-all', methods=['POST'])
+@login_required
+def convert_all():
+    try:
+        print("\n=== Starting convert_all ===")
+        # Check if user is a distributor or admin
+        if current_user.user_type not in ['distributor', 'admin']:
+            print("Access denied: User type not distributor/admin")
+            return jsonify({'error': 'Access denied. Only distributors can convert products.'}), 403
+
+        data = request.json
+        if not data:
+            print("No data provided in request")
+            return jsonify({'error': 'No data provided'}), 400
+            
+        api_spec = data.get('api_spec')
+        if not api_spec:
+            print("No API specification provided")
+            return jsonify({'error': 'API specification is required'}), 400
+
+        # Get distributor ID
+        distributor_id = None
+        if current_user.user_type == 'distributor':
+            distributor_id = current_user.distributor_id
+            print(f"Using distributor ID: {distributor_id}")
+
+        # Get selected products or all products
+        if 'product_ids' in data:
+            print(f"Converting selected products: {data['product_ids']}")
+            products = Product.query.filter(Product.id.in_(data['product_ids'])).all()
+        else:
+            print("Converting all products")
+            products = Product.query.all()
+
+        if not products:
+            print("No products found")
+            return jsonify({'error': 'No products found'}), 404
+
+        print(f"Found {len(products)} products to convert")
+
+        # Check if ANTHROPIC_API_KEY is set
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            print("ANTHROPIC_API_KEY not set")
+            return jsonify({'error': 'ANTHROPIC_API_KEY environment variable not set'}), 500
+
+        client = Anthropic(api_key=api_key)
+        converted_products = []
+        has_errors = False
+
+        # Prepare all products for a single conversion
+        all_products_data = []
+        for product in products:
+            all_products_data.append({
+                'id': product.id,
+                'content': product.content
+            })
+
+        # Convert all products in a single request
+        prompt = f"""Given these products:
+{json.dumps(all_products_data, indent=2)}
+
+And this target API specification:
+{api_spec}
+
+Please convert each product to match the target API specification format.
+For each product, preserve its ID and convert its content.
+
+IMPORTANT: For any URLs in the converted content, append "?ref={distributor_id}" if a distributor ID is provided.
+Current distributor ID: {distributor_id if distributor_id else 'None'}
+
+Return ONLY an array of objects, where each object has:
+1. id: The original product ID
+2. content: The converted content matching the API specification, with distributor ID appended to URLs if provided
+
+Return the array in valid JSON format, with no additional text or explanations."""
+
+        message = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=4096,
+            messages=[{
+                "role": "user",
+                "content": prompt
+            }]
+        )
+        
+        converted_content = message.content[0].text.strip()
+        
+        try:
+            # Parse the response as JSON
+            converted_results = json.loads(converted_content)
+            
+            # Ensure we have an array
+            if not isinstance(converted_results, list):
+                converted_results = [converted_results]
+                
+            # Save results to a file
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'conversion_{timestamp}.json'
+            filepath = os.path.join(PRODUCTS_DIR, filename)
+            
+            os.makedirs(PRODUCTS_DIR, exist_ok=True)
+            
+            # Process each converted product
+            for result in converted_results:
+                try:
+                    product = next(p for p in products if str(p.id) == str(result['id']))
+                    converted_products.append({
+                        'id': product.id,
+                        'original_content': product.content,
+                        'converted_content': result['content'],
+                        'name': product.name,
+                        'timestamp': product.timestamp.isoformat()
+                    })
+                except Exception as e:
+                    has_errors = True
+                    print(f"Error processing product {result.get('id')}: {str(e)}")
+                    converted_products.append({
+                        'id': result.get('id'),
+                        'error': str(e),
+                        'name': next((p.name for p in products if str(p.id) == str(result.get('id'))), 'Unknown')
+                    })
+            
+            # Save the final results
+            with open(filepath, 'w') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'api_spec': api_spec,
+                    'products': converted_products,
+                    'has_errors': has_errors,
+                    'distributor_id': distributor_id
+                }, f, indent=2)
+            
+            return jsonify({
+                'message': 'Conversion completed',
+                'result_id': filename,
+                'products': converted_products,
+                'has_errors': has_errors,
+                'distributor_id': distributor_id
             })
             
         except json.JSONDecodeError as e:
