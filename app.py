@@ -192,4 +192,13 @@ def require_api_key(f):
         return f(*args, **kwargs)
     return decorated_function
 
-[... rest of the file remains unchanged ...]
+# Initialize the app only if running directly
+if __name__ == '__main__':
+    with app.app_context():
+        # Run migrations instead of creating tables directly
+        from flask_migrate import upgrade as flask_migrate_upgrade
+        flask_migrate_upgrade()
+        create_admin_user()
+    
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
