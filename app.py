@@ -865,22 +865,31 @@ def init_db():
         print(f"Database URL: {'[SET]' if database_url else '[NOT SET]'}")
         
         with app.app_context():
-            # Instead of dropping tables, alter them
-            try:
-                print("Adding distributor_id column to user table...")
-                db.session.execute(text('ALTER TABLE "user" ADD COLUMN IF NOT EXISTS distributor_id VARCHAR(36) UNIQUE'))
-                print("Adding reward_percentage column to product table...")
-                db.session.execute(text('ALTER TABLE product ADD COLUMN IF NOT EXISTS reward_percentage FLOAT DEFAULT 0.0'))
-                db.session.commit()
-                print("Added new columns successfully")
-            except Exception as e:
-                print(f"Error adding columns: {str(e)}")
-                db.session.rollback()
-            
-            # Run migrations
+            # Run migrations first
             print("Running database migrations...")
             upgrade()
             print("Migrations completed successfully")
+            
+            # Add new columns if they don't exist
+            try:
+                print("Checking and adding new columns if needed...")
+                # Check if distributor_id exists before adding
+                result = db.session.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='user' AND column_name='distributor_id'"))
+                if not result.fetchone():
+                    print("Adding distributor_id column...")
+                    db.session.execute(text('ALTER TABLE "user" ADD COLUMN distributor_id VARCHAR(36) UNIQUE'))
+                
+                # Check if reward_percentage exists before adding
+                result = db.session.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='product' AND column_name='reward_percentage'"))
+                if not result.fetchone():
+                    print("Adding reward_percentage column...")
+                    db.session.execute(text('ALTER TABLE product ADD COLUMN reward_percentage FLOAT DEFAULT 0.0'))
+                
+                db.session.commit()
+                print("Column checks completed")
+            except Exception as e:
+                print(f"Error checking/adding columns: {str(e)}")
+                db.session.rollback()
             
             # Create admin and test users
             print("\nCreating/updating users...")
