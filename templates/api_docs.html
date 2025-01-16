@@ -317,12 +317,21 @@
 
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+    
+    <!-- Store OpenAPI spec -->
+    <script type="application/json" id="openapi-spec">
+        {{ openapi_spec|tojson|safe }}
+    </script>
+    
     <script>
         // Initialize Swagger UI
         window.onload = function() {
+            // Parse OpenAPI spec from the script tag
+            const openApiSpec = JSON.parse(document.getElementById('openapi-spec').textContent);
+            
             const ui = SwaggerUI({
                 dom_id: '#swagger-ui',
-                spec: {{ openapi_spec|tojson|safe }},
+                spec: openApiSpec,
                 deepLinking: true,
                 presets: [
                     SwaggerUI.presets.apis,
