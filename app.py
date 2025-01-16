@@ -1433,13 +1433,22 @@ Example:
         conversion_prompt = f"""Given these products:
 {json.dumps([p.content for p in products], indent=2)}
 
-And this target format specification:
+And this natural language query:
+{query}
+
+First, analyze each product and determine if it matches the query criteria. A product matches if it satisfies these conditions:
+1. It matches the location specified in the query (if any)
+2. It matches the type/category of product requested (if any)
+3. It matches any specific requirements or keywords in the query
+4. It falls within any price range specified (if any)
+
+Return ONLY the products that match the query criteria, formatted according to this specification:
 {format_spec}
 
-Please convert each product to match the target format specification.
-IMPORTANT: For any URLs in the converted content, append "?ref={distributor_id}"
-
-Return ONLY an array of converted products in the target format, with no additional text or explanations."""
+IMPORTANT: 
+- For any URLs in the converted content, append "?ref={distributor_id}"
+- Only include products that genuinely match the query - be strict about relevance
+- Return ONLY an array of converted products in the target format, with no additional text or explanations."""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-latest",
@@ -1686,6 +1695,21 @@ def api_docs():
     }
     
     return render_template('api_docs.html', openapi_spec=openapi_spec)
+
+@app.route('/api/test-format')
+def test_format():
+    format_spec = {
+        "type": "object",
+        "required": ["name", "description", "price"],
+        "properties": {
+            "name": {"type": "string", "description": "Name of the tour"},
+            "description": {"type": "string", "description": "Full description of the tour"},
+            "price": {"type": "number", "description": "Price in USD"},
+            "duration": {"type": "string", "description": "Duration of the tour"},
+            "location": {"type": "string", "description": "Location of the tour"}
+        }
+    }
+    return jsonify(format_spec)
 
 # Initialize the app only if running directly
 if __name__ == '__main__':
