@@ -1,35 +1,180 @@
 /* Base styles */
+:root {
+    --primary-blue: #0066FF;
+    --primary-dark: #1d1d1f;
+    --background-light: #f5f5f7;
+    --gradient-start: rgba(0, 102, 255, 0.05);
+    --gradient-end: rgba(255, 255, 255, 0);
+    --font-family-base: "Crimson Pro", serif;
+    --font-family-code: ui-monospace, "SF Mono", Monaco, monospace;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-family-base);
 }
 
 body {
-    background-color: #f5f5f7;
-    color: #1d1d1f;
+    background: radial-gradient(circle at top center, var(--gradient-start), var(--gradient-end));
+    color: var(--primary-dark);
     line-height: 1.5;
     min-height: 100vh;
-    padding: 40px 20px;
+    padding: 0;
+    font-size: 18px;
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
 }
 
+/* Brand section */
+.brand {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+    width: 100%;
+    padding-top: 48px;
+}
+
+.brand-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.brand-logo {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.brand-title {
+    font-family: "Crimson Pro", serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: 56px;
+    color: #333333;
+    margin: 0;
+    text-align: center;
+    letter-spacing: -0.01em;
+}
+
+/* Hero section */
+.hero {
+    text-align: center;
+    padding: 0 20px 80px;
+    position: relative;
+    margin-top: -12px;
+}
+
+.hero h1 {
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #4A4A4A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero .highlight {
+    color: var(--primary-blue);
+    -webkit-text-fill-color: var(--primary-blue);
+}
+
+.hero-subtitle {
+    font-size: 24px;
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 48px;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    padding: 16px 32px;
+    border-radius: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 18px;
+    position: relative;
+    overflow: hidden;
+    font-family: var(--font-family-base);
+}
+
+.button.primary {
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: 0 8px 24px rgba(0, 102, 255, 0.2);
+}
+
+.button.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 102, 255, 0.25);
+}
+
+.button.secondary {
+    background: white;
+    color: var(--primary-dark);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.button.secondary:hover {
+    background: var(--background-light);
+    transform: translateY(-2px);
+}
+
+.supported-formats {
+    margin-top: 48px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.format-icons {
+    display: flex;
+    gap: 12px;
+}
+
+.format {
+    padding: 8px 16px;
+    background: white;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    font-family: var(--font-family-base);
+}
+
 /* Typography */
 h1 {
-    font-size: 36px;
+    font-size: 48px;
     font-weight: 600;
     margin-bottom: 16px;
     color: #1d1d1f;
 }
 
 h2 {
-    font-size: 24px;
+    font-size: 36px;
     font-weight: 500;
     margin-bottom: 16px;
     color: #1d1d1f;
@@ -89,26 +234,31 @@ h2 {
 
 label {
     display: block;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     margin-bottom: 8px;
     color: #1d1d1f;
+    font-family: var(--font-family-base);
 }
 
 input[type="text"],
-textarea {
+input[type="email"],
+input[type="password"],
+input[type="number"] {
     width: 100%;
     padding: 12px;
     border: 1px solid #d2d2d7;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 16px;
+    font-family: var(--font-family-base);
     transition: all 0.2s ease;
 }
 
 textarea {
     min-height: 120px;
     resize: vertical;
-    font-family: ui-monospace, "SF Mono", Monaco, monospace;
+    font-family: var(--font-family-code);
+    font-size: 14px;
 }
 
 input:focus,
@@ -126,6 +276,7 @@ textarea:focus {
     display: flex;
     align-items: center;
     gap: 16px;
+    font-family: var(--font-family-base);
 }
 
 .user-details {
@@ -133,13 +284,14 @@ textarea:focus {
 }
 
 .user-name {
-    font-size: 14px;
+    font-size: 16px;
     color: #1d1d1f;
     display: block;
+    font-weight: 600;
 }
 
 .user-role {
-    font-size: 12px;
+    font-size: 14px;
     color: #86868b;
     display: block;
     margin-top: 2px;
@@ -185,7 +337,8 @@ textarea:focus {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 16px;
+    font-family: var(--font-family-base);
 }
 
 th {
@@ -244,4 +397,15 @@ td {
 
 .admin-link:hover {
     background: #0077ED;
+}
+
+/* Keep monospace font for code elements */
+textarea.code, pre, code {
+    font-family: var(--font-family-code);
+}
+
+/* Format badges */
+.format {
+    font-family: var(--font-family-base);
+    font-size: 15px;
 } 

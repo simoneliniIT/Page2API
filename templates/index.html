@@ -2,7 +2,10 @@
 
 {% block content %}
 <div class="brand">
-    <h1 class="brand-title">OpenTravelContent</h1>
+    <div class="brand-content">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="dataglue.dev logo" class="brand-logo">
+        <h1 class="brand-title">dataglue.dev</h1>
+    </div>
 </div>
 
 <div class="hero">
@@ -131,21 +134,6 @@
 
 {% block extra_css %}
 <style>
-.brand {
-    text-align: center;
-    padding: 40px 20px 0;
-}
-
-.brand-title {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 48px;
-    font-weight: 700;
-    color: #E63946;
-    margin: 0;
-    text-transform: none;
-    display: inline-block;
-}
-
 .hero {
     text-align: center;
     padding: 80px 20px;

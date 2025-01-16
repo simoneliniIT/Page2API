@@ -120,7 +120,7 @@ class APIKey(db.Model):
         return self.requests_count < user.api_rate_limit
 @login_manager.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    return db.session.get(User, int(id))
 
 # Update Product model to include user relationship
 class Product(db.Model):
@@ -1514,7 +1514,7 @@ def api_docs():
     openapi_spec = {
         "openapi": "3.0.0",
         "info": {
-            "title": "Page2API Travel Content API",
+            "title": "dataglue.dev API",
             "version": "1.0.0",
             "description": "Convert any travel product content into structured data for seamless distribution"
         },
