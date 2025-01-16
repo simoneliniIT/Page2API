@@ -622,6 +622,22 @@
         .modal-button.danger:hover {
             background-color: #d70015;
         }
+
+        .distributor-id {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f5f5f7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .distributor-id code {
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 16px;
+            color: #1d1d1f;
+        }
     </style>
 </head>
 <body>
@@ -636,6 +652,15 @@
     <div class="container">
         <h1>Product Data Consumer</h1>
         
+        <!-- Add Distributor ID Section -->
+        <div class="section">
+            <h2>Your Distributor ID</h2>
+            <div class="distributor-id">
+                <code>{{ current_user.distributor_id }}</code>
+                <button class="copy-button" onclick="copyDistributorId()">Copy</button>
+            </div>
+        </div>
+
         <div class="nav-buttons">
             <a href="{{ url_for('api_docs') }}" class="button">API Documentation</a>
         </div>
@@ -1075,6 +1100,21 @@
                 button.disabled = false;
                 button.textContent = originalText;
             }
+        }
+
+        function copyDistributorId() {
+            const distributorId = document.querySelector('.distributor-id code').textContent;
+            navigator.clipboard.writeText(distributorId)
+                .then(() => {
+                    const button = document.querySelector('.distributor-id .copy-button');
+                    button.textContent = 'Copied!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                        button.classList.remove('copied');
+                    }, 2000);
+                })
+                .catch(error => console.error('Error copying distributor ID:', error));
         }
     </script>
 </body>
