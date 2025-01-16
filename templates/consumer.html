@@ -522,6 +522,14 @@
             text-transform: capitalize;
         }
 
+        .distributor-id {
+            font-size: 12px;
+            color: #1d1d1f;
+            display: block;
+            margin-top: 2px;
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+        }
+
         .logout-button {
             background-color: #e8e8ed;
             color: #1d1d1f;
@@ -645,6 +653,7 @@
         <div class="user-details">
             <span class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</span>
             <span class="user-role">{{ current_user.user_type }}</span>
+            <span class="distributor-id">ID: {{ current_user.distributor_id }}</span>
         </div>
         <a href="{{ url_for('logout') }}" class="logout-button">Log Out</a>
     </div>
