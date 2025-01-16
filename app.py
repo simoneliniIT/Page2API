@@ -118,7 +118,6 @@ class APIKey(db.Model):
             return True
             
         return self.requests_count < user.api_rate_limit
-
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -1506,9 +1505,9 @@ def api_docs():
     openapi_spec = {
         "openapi": "3.0.0",
         "info": {
-            "title": "Page2API Product Conversion API",
+            "title": "Page2API Travel Content API",
             "version": "1.0.0",
-            "description": "API for converting travel products to your desired format"
+            "description": "Convert any travel product content into structured data for seamless distribution"
         },
         "servers": [
             {
@@ -1523,6 +1522,56 @@ def api_docs():
                     "in": "header",
                     "name": "X-API-Key"
                 }
+            },
+            "schemas": {
+                "ConversionRequest": {
+                    "type": "object",
+                    "required": ["query", "format_url", "distributor_id"],
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Natural language query describing the products to find",
+                            "example": "all walking tours in Rome under $100"
+                        },
+                        "format_url": {
+                            "type": "string",
+                            "description": "URL containing the target format specification",
+                            "example": "https://example.com/product-format.json"
+                        },
+                        "distributor_id": {
+                            "type": "string",
+                            "description": "Your distributor ID for affiliate tracking",
+                            "example": "DIST123"
+                        }
+                    }
+                },
+                "ConversionResponse": {
+                    "type": "object",
+                    "properties": {
+                        "job_id": {
+                            "type": "string",
+                            "description": "ID of the conversion job"
+                        },
+                        "status": {
+                            "type": "string",
+                            "enum": ["processing", "completed", "failed"],
+                            "description": "Current status of the conversion job"
+                        },
+                        "estimated_time": {
+                            "type": "string",
+                            "description": "Estimated time to completion"
+                        }
+                    }
+                },
+                "ErrorResponse": {
+                    "type": "object",
+                    "properties": {
+                        "error": {
+                            "type": "string",
+                            "description": "Error message"
+                        }
+                    }
+                }
             }
         },
         "security": [
@@ -1535,75 +1584,41 @@ def api_docs():
                 "post": {
                     "summary": "Convert products based on query",
                     "description": "Convert travel products matching the query to the specified format",
+                    "operationId": "convertProducts",
+                    "tags": ["Conversion"],
                     "requestBody": {
                         "required": True,
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "required": ["query", "format_url", "distributor_id"],
-                                    "properties": {
-                                        "query": {
-                                            "type": "string",
-                                            "description": "Natural language query describing the products to find",
-                                            "example": "all walking tours in Rome under $100"
-                                        },
-                                        "format_url": {
-                                            "type": "string",
-                                            "description": "URL containing the target format specification",
-                                            "example": "https://example.com/product-format.json"
-                                        },
-                                        "distributor_id": {
-                                            "type": "string",
-                                            "description": "Your distributor ID",
-                                            "example": "abc123-def456"
-                                        }
-                                    }
+                                    "$ref": "#/components/schemas/ConversionRequest"
                                 }
                             }
                         }
                     },
                     "responses": {
-                        "200": {
-                            "description": "Successful conversion",
+                        "202": {
+                            "description": "Conversion job accepted",
                             "content": {
                                 "application/json": {
                                     "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "result_id": {
-                                                "type": "string",
-                                                "description": "ID of the conversion result"
-                                            },
-                                            "products": {
-                                                "type": "array",
-                                                "description": "Array of converted products",
-                                                "items": {
-                                                    "type": "object"
-                                                }
-                                            }
-                                        }
+                                        "$ref": "#/components/schemas/ConversionResponse"
                                     }
                                 }
                             }
                         },
                         "400": {
-                            "description": "Invalid request",
+                            "description": "Invalid request parameters",
                             "content": {
                                 "application/json": {
                                     "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "error": {
-                                                "type": "string"
-                                            }
-                                        }
+                                        "$ref": "#/components/schemas/ErrorResponse"
                                     }
                                 }
                             }
                         },
                         "401": {
-                            "description": "Invalid API key or distributor ID"
+                            "description": "Invalid or missing API key"
                         },
                         "429": {
                             "description": "Rate limit exceeded"
@@ -1611,19 +1626,21 @@ def api_docs():
                     }
                 }
             },
-            "/api/v1/conversion/{result_id}": {
+            "/api/v1/conversion/{job_id}": {
                 "get": {
                     "summary": "Get conversion result",
-                    "description": "Get the result of a previous conversion",
+                    "description": "Get the result of a conversion job",
+                    "operationId": "getConversionResult",
+                    "tags": ["Conversion"],
                     "parameters": [
                         {
-                            "name": "result_id",
+                            "name": "job_id",
                             "in": "path",
                             "required": True,
                             "schema": {
                                 "type": "string"
                             },
-                            "description": "ID of the conversion result"
+                            "description": "ID of the conversion job"
                         }
                     ],
                     "responses": {
@@ -1634,24 +1651,25 @@ def api_docs():
                                     "schema": {
                                         "type": "object",
                                         "properties": {
-                                            "timestamp": {
+                                            "job_id": {
                                                 "type": "string",
-                                                "format": "date-time"
+                                                "description": "ID of the conversion job"
                                             },
-                                            "query": {
-                                                "type": "string"
+                                            "status": {
+                                                "type": "string",
+                                                "enum": ["completed", "failed"],
+                                                "description": "Final status of the conversion"
                                             },
-                                            "format_url": {
-                                                "type": "string"
-                                            },
-                                            "distributor_id": {
-                                                "type": "string"
-                                            },
-                                            "products": {
+                                            "result": {
                                                 "type": "array",
+                                                "description": "Array of converted products",
                                                 "items": {
                                                     "type": "object"
                                                 }
+                                            },
+                                            "error": {
+                                                "type": "string",
+                                                "description": "Error message if status is failed"
                                             }
                                         }
                                     }
@@ -1659,7 +1677,7 @@ def api_docs():
                             }
                         },
                         "404": {
-                            "description": "Conversion result not found"
+                            "description": "Conversion job not found"
                         }
                     }
                 }
@@ -1679,3 +1697,4 @@ if __name__ == '__main__':
     
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
