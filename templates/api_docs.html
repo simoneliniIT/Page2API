@@ -4,79 +4,222 @@
     <title>API Documentation - Page2API</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css">
     <style>
-        .swagger-ui .topbar {
-            display: none;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        
-        .swagger-ui {
-            margin: 20px auto;
-            max-width: 1460px;
+
+        body {
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.5;
+            padding-bottom: 40px;
         }
-        
+
+        /* User Info Styles */
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-details {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #1d1d1f;
+            display: block;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #86868b;
+            display: block;
+            margin-top: 2px;
+            text-transform: capitalize;
+        }
+
+        .logout-button {
+            background-color: #e8e8ed;
+            color: #1d1d1f;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 980px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .logout-button:hover {
+            background-color: #d8d8d8;
+        }
+
+        /* API Key Section Styles */
         .api-key-section {
             max-width: 1460px;
             margin: 20px auto;
-            padding: 20px;
+            padding: 24px;
             background: white;
-            border-radius: 4px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
-        
+
         .api-key-section h2 {
-            margin-top: 0;
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: #1d1d1f;
         }
-        
+
         .api-keys-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
         }
-        
+
         .api-keys-table th,
         .api-keys-table td {
-            padding: 12px;
+            padding: 16px;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e8e8ed;
         }
-        
+
         .api-keys-table th {
-            background: #f5f5f5;
+            background: #f5f5f7;
+            font-weight: 500;
+            color: #1d1d1f;
+            font-size: 14px;
         }
-        
+
+        .api-keys-table td {
+            font-size: 14px;
+            color: #1d1d1f;
+        }
+
+        /* Create Key Form Styles */
         .create-key-form {
-            margin-top: 20px;
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
-        
+
         .create-key-form input[type="text"] {
-            padding: 8px;
-            margin-right: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 14px;
             width: 300px;
+            transition: all 0.2s ease;
         }
-        
+
+        .create-key-form input[type="text"]:focus {
+            outline: none;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+        }
+
+        /* Button Styles */
         .button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            background: #0071e3;
+            background-color: #0071e3;
             color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 980px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
-        
+
         .button:hover {
-            background: #0077ED;
+            background-color: #0077ED;
+            transform: scale(1.02);
         }
-        
+
         .button.delete {
-            background: #dc3545;
+            background-color: #ff3b30;
         }
-        
+
         .button.delete:hover {
-            background: #c82333;
+            background-color: #ff453a;
         }
-        
-        /* Modal styles */
+
+        /* Swagger UI Customization */
+        .swagger-ui {
+            margin: 20px auto;
+            max-width: 1460px;
+            padding: 24px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .swagger-ui .topbar {
+            display: none;
+        }
+
+        .swagger-ui .info {
+            margin: 20px 0;
+        }
+
+        .swagger-ui .info .title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 24px;
+            font-weight: 500;
+            color: #1d1d1f;
+        }
+
+        .swagger-ui .opblock {
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e8e8ed;
+            margin: 0 0 16px;
+        }
+
+        .swagger-ui .opblock .opblock-summary {
+            padding: 16px;
+        }
+
+        .swagger-ui .opblock .opblock-summary-method {
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .swagger-ui .opblock-description-wrapper p {
+            font-size: 14px;
+            color: #1d1d1f;
+            line-height: 1.5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
         .api-key-modal {
             display: none;
             position: fixed;
@@ -85,119 +228,66 @@
             transform: translate(-50%, -50%);
             background: white;
             padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
             z-index: 1001;
             width: 90%;
             max-width: 500px;
         }
 
-        .api-key-modal.visible {
-            display: block;
-        }
-
-        .api-key-modal h3 {
-            margin: 0 0 16px 0;
-            font-size: 18px;
-            color: #1d1d1f;
-        }
-
-        .api-key-display {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f5f5f7;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-family: ui-monospace, "SF Mono", Monaco, monospace;
-            font-size: 14px;
-            word-break: break-all;
-        }
-
-        .copy-button {
-            padding: 8px 16px;
-            background: #0071e3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-
-        .copy-button:hover {
-            background: #0077ED;
-        }
-
-        .copy-button.copied {
-            background: #34c759;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-        }
-
+        .api-key-modal.visible,
         .modal-overlay.visible {
             display: block;
         }
 
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        .modal-button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .modal-button.primary {
-            background: #0071e3;
-            color: white;
-        }
-
-        .modal-button.secondary {
-            background: #e8e8ed;
+        .api-key-modal h3 {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 16px;
             color: #1d1d1f;
         }
 
-        /* Documentation styles */
+        .api-key-display {
+            background: #f5f5f7;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Documentation Section */
         .documentation {
             max-width: 1460px;
-            margin: 40px auto;
-            padding: 20px;
+            margin: 20px auto;
+            padding: 24px;
             background: white;
-            border-radius: 4px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
 
         .documentation h2 {
-            color: #1d1d1f;
+            font-size: 24px;
+            font-weight: 500;
             margin-bottom: 24px;
+            color: #1d1d1f;
         }
 
         .documentation h3 {
-            color: #1d1d1f;
+            font-size: 18px;
+            font-weight: 500;
             margin: 32px 0 16px;
+            color: #1d1d1f;
         }
 
         .documentation p {
-            color: #424245;
+            font-size: 14px;
             line-height: 1.6;
+            color: #1d1d1f;
             margin-bottom: 16px;
         }
 
@@ -206,20 +296,19 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-family: ui-monospace, "SF Mono", Monaco, monospace;
-            font-size: 14px;
+            font-size: 13px;
+            color: #1d1d1f;
         }
 
         .documentation pre {
             background: #f5f5f7;
             padding: 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow-x: auto;
             margin: 16px 0;
-        }
-
-        .documentation pre code {
-            background: none;
-            padding: 0;
+            font-family: ui-monospace, "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.6;
         }
 
         .documentation ul {
@@ -229,12 +318,36 @@
 
         .documentation li {
             margin-bottom: 8px;
-            color: #424245;
+            font-size: 14px;
             line-height: 1.6;
+            color: #1d1d1f;
+        }
+
+        /* Navigation */
+        .nav-buttons {
+            max-width: 1460px;
+            margin: 20px auto;
+            padding: 0 24px;
+            display: flex;
+            gap: 16px;
         }
     </style>
 </head>
 <body>
+    <!-- User Info -->
+    <div class="user-info">
+        <div class="user-details">
+            <span class="user-name">{{ current_user.first_name }} {{ current_user.last_name }}</span>
+            <span class="user-role">{{ current_user.user_type }}</span>
+        </div>
+        <a href="{{ url_for('logout') }}" class="logout-button">Log Out</a>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-buttons">
+        <a href="{{ url_for('consumer') }}" class="button">Back to Consumer Dashboard</a>
+    </div>
+
     <!-- API Key Management Section -->
     <div class="api-key-section">
         <h2>API Keys</h2>
@@ -259,37 +372,51 @@
         </table>
     </div>
 
-    <!-- Modal for displaying new API key -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="api-key-modal" id="apiKeyModal">
-            <h3>Your New API Key</h3>
-            <p>Please copy your API key now. You won't be able to see it again!</p>
-            <div class="api-key-display">
-                <span id="newApiKey"></span>
-                <button class="copy-button" onclick="copyApiKey()">Copy</button>
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-button primary" onclick="closeModal()">Done</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Swagger UI Section -->
     <div id="swagger-ui" data-spec='{{ openapi_spec|tojson|safe }}'></div>
 
     <!-- Documentation Section -->
     <div class="documentation">
-        <h2>Comprehensive Documentation</h2>
-
-        <h3>Introduction</h3>
-        <p>The Page2API Travel Content API allows you to convert any travel product content into structured data for seamless distribution. This API is designed for both travel suppliers and distributors to standardize and exchange travel product information efficiently.</p>
+        <h2>Getting Started</h2>
 
         <h3>Authentication</h3>
-        <p>All API requests require an API key to be included in the request headers. To authenticate your requests, include your API key in the <code>X-API-Key</code> header:</p>
+        <p>All API requests require an API key to be included in the request headers:</p>
         <pre><code>X-API-Key: your_api_key_here</code></pre>
 
         <h3>Rate Limiting</h3>
-        <p>API requests are rate-limited based on your account tier. The default rate limit is 100 requests per hour. You can view your current rate limit and usage in the API Keys table above.</p>
+        <p>API requests are rate-limited based on your account tier. The default rate limit is 100 requests per hour per API key.</p>
+
+        <h3>Making Requests</h3>
+        <p>To convert travel products, send a POST request to the conversion endpoint with your query and format specification:</p>
+        <pre><code>curl -X POST https://page2api.onrender.com/api/v1/convert \
+-H "X-API-Key: your_api_key_here" \
+-H "Content-Type: application/json" \
+-d '{
+    "query": "walking tours in Rome",
+    "format_url": "https://example.com/format.json",
+    "distributor_id": "your_distributor_id"
+}'</code></pre>
+
+        <h3>Format Specification</h3>
+        <p>The format specification should be a JSON Schema document that defines the structure of your desired output. Example:</p>
+        <pre><code>{
+  "type": "object",
+  "required": ["name", "description", "price"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the tour"
+    },
+    "description": {
+      "type": "string",
+      "description": "Full description"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price in USD"
+    }
+  }
+}</code></pre>
 
         <h3>Error Handling</h3>
         <p>The API uses standard HTTP response codes to indicate success or failure:</p>
@@ -302,17 +429,21 @@
             <li><code>429 Too Many Requests</code> - Rate limit exceeded</li>
             <li><code>500 Internal Server Error</code> - Server error</li>
         </ul>
+    </div>
 
-        <h3>Example Usage</h3>
-        <p>Here's an example of how to convert travel products using the API:</p>
-        <pre><code>curl -X POST https://page2api.com/api/v1/convert \
--H "X-API-Key: your_api_key_here" \
--H "Content-Type: application/json" \
--d '{
-    "query": "walking tours in Rome under $100",
-    "format_url": "https://example.com/product-format.json",
-    "distributor_id": "your_distributor_id"
-}'</code></pre>
+    <!-- Modal for displaying new API key -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="api-key-modal" id="apiKeyModal">
+            <h3>Your New API Key</h3>
+            <p>Please copy your API key now. You won't be able to see it again!</p>
+            <div class="api-key-display">
+                <span id="newApiKey"></span>
+                <button class="button" onclick="copyApiKey()">Copy</button>
+            </div>
+            <div class="modal-buttons">
+                <button class="button" onclick="closeModal()">Done</button>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript Dependencies -->
@@ -415,12 +546,10 @@
             const apiKey = document.getElementById('newApiKey').textContent;
             navigator.clipboard.writeText(apiKey)
                 .then(() => {
-                    const button = document.querySelector('.copy-button');
+                    const button = document.querySelector('.api-key-display .button');
                     button.textContent = 'Copied!';
-                    button.classList.add('copied');
                     setTimeout(() => {
                         button.textContent = 'Copy';
-                        button.classList.remove('copied');
                     }, 2000);
                 })
                 .catch(error => console.error('Error copying API key:', error));
@@ -430,9 +559,6 @@
             document.getElementById('modalOverlay').classList.remove('visible');
             document.getElementById('apiKeyModal').classList.remove('visible');
         }
-
-        // Load API keys when the page loads
-        document.addEventListener('DOMContentLoaded', loadApiKeys);
     </script>
 </body>
 </html> 
