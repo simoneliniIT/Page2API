@@ -275,7 +275,7 @@
     </div>
 
     <!-- Swagger UI Section -->
-    <div id="swagger-ui"></div>
+    <div id="swagger-ui" data-spec='{{ openapi_spec|tojson|safe }}'></div>
 
     <!-- Documentation Section -->
     <div class="documentation">
@@ -317,31 +317,36 @@
 
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
-    
-    <!-- Store OpenAPI spec -->
-    <script type="application/json" id="openapi-spec">
-        {{ openapi_spec|tojson|safe }}
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
     
     <script>
         // Initialize Swagger UI
         window.onload = function() {
-            // Parse OpenAPI spec from the script tag
-            const openApiSpec = JSON.parse(document.getElementById('openapi-spec').textContent);
+            // Get OpenAPI spec from data attribute
+            const swaggerElement = document.getElementById('swagger-ui');
+            const spec = JSON.parse(swaggerElement.getAttribute('data-spec'));
             
-            const ui = SwaggerUI({
+            // Initialize Swagger UI
+            const ui = SwaggerUIBundle({
                 dom_id: '#swagger-ui',
-                spec: openApiSpec,
+                spec: spec,
                 deepLinking: true,
                 presets: [
-                    SwaggerUI.presets.apis,
-                    SwaggerUI.SwaggerUIStandalonePreset
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
                 ],
                 plugins: [
-                    SwaggerUI.plugins.DownloadUrl
+                    SwaggerUIBundle.plugins.DownloadUrl
                 ],
-                layout: "BaseLayout"
+                layout: "BaseLayout",
+                docExpansion: "list",
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                defaultModelRendering: 'model'
             });
+
+            // Load API keys
+            loadApiKeys();
         }
 
         // API Key Management Functions
