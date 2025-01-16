@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "required": ["name", "description", "price"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the tour"
+    },
+    "description": {
+      "type": "string",
+      "description": "Full description of the tour"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price in USD"
+    },
+    "duration": {
+      "type": "string",
+      "description": "Duration of the tour"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location of the tour"
+    }
+  }
+}
